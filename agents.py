@@ -165,7 +165,7 @@ class DQNAgent(object):
         if frame < self.learn_start or frame % self.update_freq != 0:
             return None
         
-        batch_vars = self.prep_minibatch()ß
+        batch_vars = self.prep_minibatch()
         loss = self.compute_loss(batch_vars)
 
         self.optimizer.zero_grad()
