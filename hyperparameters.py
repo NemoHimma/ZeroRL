@@ -55,7 +55,7 @@ class Config(object):
         self.TARGET_NET_UPDATE_FREQUENCY = 1000
         self.CURRENT_NET_UPDATE_FREQUENCY = 1
         self.LEARN_START = 10000   # learn_start
-        self.MAX_FRAMES = 100000   # learn_end
+        self.MAX_FRAMES = 1000000   # learn_end
 
         # data logging parameters
         self.ACTION_SELECTION_COUNT_FREQUENCY = 1000

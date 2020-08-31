@@ -7,7 +7,10 @@ import torch
 import torch.optim as optim
 
 from ReplayBuffer import ExperienceReplayBuffer
-from networks import DQN, DuelingDQN, CategoricalDQN, CategoricalDuelingDQN, DuelingQRDQN
+
+# from networks import DQN, DuelingDQN, CategoricalDQN, CategoricalDuelingDQN, DuelingQRDQN
+from networks import DQN
+
 from bodies import AtariBody, SimpleBody
 
 from timeit import default_timer as timer
@@ -59,7 +62,7 @@ class DQNAgent(object):
         self.gamma = config.GAMMA
 
         # Memory
-        self.experience_replay_size = config.EXPERIENCE_REPLAY_SIZE
+        self.experience_replay_size = config.Replay_Buffer_Size
         
         # Model & Target Model
         self.declare_networks()
@@ -115,7 +118,7 @@ class DQNAgent(object):
         batch_states_shape = (-1, ) + self.input_shape
 
         batch_states = torch.tensor(batch_states, device = self.device, dtype = torch.float).view(batch_states_shape)
-        batch_actions = torch.tensor(batch_actions, device = self.device, dtype = torch.float).view(-1, 1)
+        batch_actions = torch.tensor(batch_actions, device = self.device, dtype = torch.long).view(-1, 1)
         batch_rewards = torch.tensor(batch_rewards, device = self.device, dtype = torch.float).view(-1, 1)
 
         non_final_mask = torch.tensor(tuple(map(lambda s : s is not None, batch_next_states)), device = self.device, dtype = torch.uint8)
@@ -138,7 +141,7 @@ class DQNAgent(object):
 
         # target-q-values
         with torch.no_grad():
-            max_next_q_values = torch.zeros(self.batch_size, device = self.device, dtype = torch.float).unsqueeze(1)
+            max_next_q_values = torch.zeros(self.batch_size, device = self.device, dtype = torch.float).unsqueeze(dim=1)
             if not empty_next_state_values:
                 # get_max_next_state_action
                 max_next_state_action = self.target_model(non_final_next_states).max(dim=1)[1].view(-1, 1) 
@@ -210,12 +213,12 @@ class DQNAgent(object):
 
 #################### save&load Model/Optimizer/Memory/reward/action/TD/Sig_params_mag #######################################
     def save_weight(self):
-        torch.save(self.model.state_dict(), './saved_agents/model.dump')
-        torch.save(self.optimizer.state_dict(), './saved_agents/optim.dump')
+        torch.save(self.model.state_dict(), './experiments/model.dump')
+        torch.save(self.optimizer.state_dict(), './experiments/optim.dump')
 
     def load_weight(self):
-        fname_model = './saved_agents/model.dump'
-        fname_optim = './saved_agents/model.dump'
+        fname_model = './experiments/model.dump'
+        fname_optim = './experiments/optim.dump'
 
         if os.path.isfile(fname_model):
             self.model.load_state_dict(torch.load(fname_model))
@@ -225,10 +228,10 @@ class DQNAgent(object):
             self.optimizer.load_state_dict(torch.load(fname_optim))
 
     def save_replay(self):
-        pickle.dump(self.memory, open('./saved_agents/exp_replay_agent.dump', 'wb'))
+        pickle.dump(self.memory, open('./experiments/exp_replay_agent.dump', 'wb'))
 
     def load_replay(self):
-        fname = './saved_agents/exp_replay_agent.dump'
+        fname = './experimentss/exp_replay_agent.dump'
         if os.path.isfile(fname):
             self.memory = pickle.load(open(fname, 'rb'))
 

@@ -3,6 +3,7 @@ import math, glob, os
 
 from timeit import default_timer as timer
 from datetime import timedelta
+
 from tqdm import tqdm 
 # env & Monitor & Wrapper
 import gym 
@@ -11,7 +12,7 @@ from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from wrappers import WrapPyTorch
 
 # Agent
-from agents import DQNAgent
+from DQNagent import DQNAgent
 
 # Config
 from hyperparameters import Config 

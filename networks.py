@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .bodies import SimpleBody , AtariBody
-from .noisy_layer import NoisyLinear
+from bodies import SimpleBody , AtariBody
+from noisy_layer import NoisyLinear
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
