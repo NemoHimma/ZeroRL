@@ -212,13 +212,14 @@ class DQNAgent(object):
 
 
 #################### save&load Model/Optimizer/Memory/reward/action/TD/Sig_params_mag #######################################
+
     def save_weight(self):
-        torch.save(self.model.state_dict(), './experiments/model.dump')
-        torch.save(self.optimizer.state_dict(), './experiments/optim.dump')
+        torch.save(self.model.state_dict(), os.path.join(self.log_dir,'model.dump'))
+        torch.save(self.optimizer.state_dict(), os.path.join(self.log_dir, 'optim.dump'))
 
     def load_weight(self):
-        fname_model = './experiments/model.dump'
-        fname_optim = './experiments/optim.dump'
+        fname_model = os.path.join(self.log_dir, 'model.dump')
+        fname_optim = os.path.join(self.log_dir,'optim.dump')
 
         if os.path.isfile(fname_model):
             self.model.load_state_dict(torch.load(fname_model))
@@ -228,10 +229,10 @@ class DQNAgent(object):
             self.optimizer.load_state_dict(torch.load(fname_optim))
 
     def save_replay(self):
-        pickle.dump(self.memory, open('./experiments/exp_replay_agent.dump', 'wb'))
+        pickle.dump(self.memory, open(os.path.join(self.log_dir, 'exp_replay_agent.dump'), 'wb'))
 
     def load_replay(self):
-        fname = './experimentss/exp_replay_agent.dump'
+        fname = os.path.join(self.log_dir, 'exp_replay_agent.dump')
         if os.path.isfile(fname):
             self.memory = pickle.load(open(fname, 'rb'))
 
