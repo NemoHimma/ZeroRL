@@ -1,5 +1,6 @@
 import numpy as np
 import math, glob, os
+import torch
 
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -21,7 +22,7 @@ from plot import plot_all_data
 
 if __name__ == "__main__":
     start = timer()
-    log_dir = './DQN4/'
+    log_dir = './NoisyDQN4/'
 
     # make_dirs or remove 
     try:
@@ -36,10 +37,10 @@ if __name__ == "__main__":
 
     # config
     config = Config()
-    
-    # device
-    config.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # device 
+    config.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     # set DQN config
     config.GAMMA = 0.99
     config.LR = 1e-4
@@ -56,6 +57,10 @@ if __name__ == "__main__":
 
     config.Replay_Buffer_Size = 100000
     config.N_STEPS = 4
+
+    config.USE_NOISY_NETS = True
+    config.SIGMA_INIT = 0.5
+
 
     # env
     env_id = "PongNoFrameskip-v4"
@@ -82,8 +87,12 @@ if __name__ == "__main__":
         # excution step
         prev_observation = observation
         observation , reward , done , _ = env.step(action)
+
+        # Modifications
         if done:
             observation = None
+        else:
+            observation = observation
         
         # main-step
         agent.update(prev_observation, action , reward , observation, frame_idx) 
@@ -101,7 +110,7 @@ if __name__ == "__main__":
             agent.save_weight()
             try:
                 print('frame %s. time: %s' % (frame_idx, timedelta(seconds=int(timer()-start))))
-                plot_all_data(log_dir, env_id, 'DQN4', config.MAX_FRAMES, bin_size=(10, 100, 100, 1), smooth=1, save_filename = 'DQN4.png', time=timedelta(seconds=int(timer()-start)), ipynb=False)
+                plot_all_data(log_dir, env_id, 'NoisyDQN4', config.MAX_FRAMES, bin_size=(10, 100, 100, 1), smooth=1, save_filename = 'NoisyDQN4.png', time=timedelta(seconds=int(timer()-start)), ipynb=False)
             except IOError:
                 pass
 

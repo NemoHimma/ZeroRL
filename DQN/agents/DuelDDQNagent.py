@@ -9,13 +9,14 @@ import torch.optim as optim
 from ReplayBuffer import ExperienceReplayBuffer
 
 # from networks import DQN, DuelingDQN, CategoricalDQN, CategoricalDuelingDQN, DuelingQRDQN
-from networks import DQN
+from networks import DuelingDQN
 
 from bodies import AtariBody, SimpleBody
 
 from timeit import default_timer as timer
 
-class DQNAgent(object):
+# Noisy, PER , N-Steps
+class DuelingDDQNAgent(object):
     def __init__(self, config=None, env=None, log_dir='./experiments/', static_policy=False):
         # Device
         self.device = config.device
@@ -83,8 +84,8 @@ class DQNAgent(object):
 
     
     def declare_networks(self):
-        self.model = DQN(self.input_shape, self.num_actions, self.noisy, self.sigma_init, body = AtariBody)
-        self.target_model = DQN(self.input_shape, self.num_actions, self.noisy, self.sigma_init, body = AtariBody)
+        self.model = DuelingDQN(self.input_shape, self.num_actions, self.noisy, self.sigma_init, body = AtariBody)
+        self.target_model = DuelingDQN(self.input_shape, self.num_actions, self.noisy, self.sigma_init, body = AtariBody)
 
     def declare_memory(self):
         if not self.priority_replay:
@@ -144,7 +145,7 @@ class DQNAgent(object):
             max_next_q_values = torch.zeros(self.batch_size, device = self.device, dtype = torch.float).unsqueeze(dim=1)
             if not empty_next_state_values:
                 # get_max_next_state_action
-                max_next_state_action = self.target_model(non_final_next_states).max(dim=1)[1].view(-1, 1) 
+                max_next_state_action = self.model(non_final_next_states).max(dim=1)[1].view(-1, 1)  # action selection comes from current model (double)
                 self.target_model.sample_noise()
                 max_next_q_values[non_final_mask] = self.target_model(non_final_next_states).gather(1, max_next_state_action)
             target_q_values = batch_reward + (self.gamma ** self.nsteps) * max_next_q_values

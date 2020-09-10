@@ -46,7 +46,7 @@ class DuelingDQN(nn.Module):
         self.num_actions = num_actions
         self.noisy = noisy
 
-        self.body = body(self.input_shape, self.num_actions, noisy, sigma_init)
+        self.body = body(self.input_shape, self.num_actions, self.noisy, sigma_init)
 
         if not self.noisy:
             self.adv1 = nn.Linear(self.body.feature_size(), 512)

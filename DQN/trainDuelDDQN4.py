@@ -1,5 +1,6 @@
 import numpy as np
 import math, glob, os
+import torch
 
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -11,7 +12,8 @@ from baselines import bench
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from wrappers import WrapPyTorch
 # Agent
-from DQNagent import DQNAgent
+#from DQNagent import DQNAgent
+from DuelDDQNagent import DuelingDDQNAgent
 
 # Config
 from hyperparameters import Config 
@@ -21,7 +23,7 @@ from plot import plot_all_data
 
 if __name__ == "__main__":
     start = timer()
-    log_dir = './DQN4/'
+    log_dir = './DuelDDQN4/'
 
     # make_dirs or remove 
     try:
@@ -36,8 +38,8 @@ if __name__ == "__main__":
 
     # config
     config = Config()
-    
-    # device
+
+    # device 
     config.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # set DQN config
@@ -65,7 +67,7 @@ if __name__ == "__main__":
     env = WrapPyTorch(env)
 
     # agent
-    agent = DQNAgent(config = config, env = env, log_dir = log_dir)
+    agent = DuelingDDQNAgent(config = config, env = env, log_dir = log_dir)
 
     ## Interaction & Learning
     episode_reward = 0
@@ -101,7 +103,7 @@ if __name__ == "__main__":
             agent.save_weight()
             try:
                 print('frame %s. time: %s' % (frame_idx, timedelta(seconds=int(timer()-start))))
-                plot_all_data(log_dir, env_id, 'DQN4', config.MAX_FRAMES, bin_size=(10, 100, 100, 1), smooth=1, save_filename = 'DQN4.png', time=timedelta(seconds=int(timer()-start)), ipynb=False)
+                plot_all_data(log_dir, env_id, 'DuelDDQN4', config.MAX_FRAMES, bin_size=(10, 100, 100, 1), smooth=1, save_filename = 'DuelDDQN4.png', time=timedelta(seconds=int(timer()-start)), ipynb=False)
             except IOError:
                 pass
 
