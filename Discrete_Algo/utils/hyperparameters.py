@@ -8,7 +8,7 @@ class Config(object):
         # Tricks
         self.USE_NOISY_NETS = False
         self.USE_PRIORITY_REPLAY = False
-        self.N_STEPS = 1
+        self.N_STEPS = 4
 
         # Noisy_Net
         self.SIGMA_INIT = 0.5
@@ -35,21 +35,21 @@ class Config(object):
         # Epsilon_greedy parameters
 
         '''
-        When random number is greater than epilon, it exploits the model. Otherwise, it explores.
+        When random number is greater than epsilon, it exploits the model. Otherwise, it explores.
         '''
 
-        self.epison_start = 1.0
-        self.epsilon_final = 0.01
-        self.epsilon_decay = 30000
+        self.EPSILON_START = 1.0
+        self.EPSILON_FINAL = 0.01
+        self.EPSILON_DECAY = 30000
 
-        self.epsilon_by_frame = lambda frame_idx:self.epsilon_final + (self.epison_start - self.epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
+        self.EPSILON_BY_FRAME = lambda frame_idx:self.epsilon_final + (self.epison_start - self.epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
 
         # Learning Rate & Batch Size
         self.LR = 1e-4
         self.BATCH_SIZE = 32
 
         # Buffer Size
-        self.Replay_Buffer_Size = 100000
+        self.REPLAY_BUFFER_SIZE = 100000
 
         # Learning Procedure Parameters
         self.TARGET_NET_UPDATE_FREQUENCY = 1000

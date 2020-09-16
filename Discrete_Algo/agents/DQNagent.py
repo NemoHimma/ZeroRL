@@ -80,7 +80,7 @@ class DQNAgent(object):
             self.target_model.eval()
         else:
             self.model.train()
-            self.target_model.eval()
+            self.target_model.train()
 
     
     def declare_networks(self):
