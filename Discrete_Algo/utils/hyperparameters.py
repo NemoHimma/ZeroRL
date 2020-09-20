@@ -42,7 +42,7 @@ class Config(object):
         self.EPSILON_FINAL = 0.01
         self.EPSILON_DECAY = 30000
 
-        self.EPSILON_BY_FRAME = lambda frame_idx:self.epsilon_final + (self.epison_start - self.epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
+        self.EPSILON_BY_FRAME = lambda frame_idx:self.EPSILON_FINAL + (self.EPSILON_START - self.EPSILON_FINAL) * math.exp(-1. * frame_idx / self.EPSILON_DECAY)
 
         # Learning Rate & Batch Size
         self.LR = 1e-4

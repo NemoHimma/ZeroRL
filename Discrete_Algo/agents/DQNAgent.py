@@ -1,6 +1,9 @@
 import torch
+import pickle
 import torch.optim as optim
+import numpy as np
 import csv
+import os 
 
 from buffer.ReplayBuffer import ExperienceReplayBuffer
 from networks.networks import DQN
@@ -13,20 +16,24 @@ class DQNAgent(object):
 
         # Tricks Flags
         self.noisy = config.USE_NOISY_NETS
+
         self.priority_replay = config.USE_PRIORITY_REPLAY
+
         self.nsteps = config.N_STEPS
 
         # Tricks Parameters
         self.sigma_init = config.SIGMA_INIT
+
         self.alpha = config.PRIORITY_ALPHA
         self.priority_beta_start = config.PRIORITY_BETA_START
         self.priority_beta_frames = config.PRIORITY_BETA_FRAMES
+
         self.nstep_buffer = []
 
         # Categorical-DQN
-        self.ATOMS = config.ATOMS
-        self.V_MAX = config.V_MAX
-        self.V_MIN = config.V_MIN
+        self.atoms = config.ATOMS
+        self.v_max = config.V_MAX
+        self.v_min = config.V_MIN
 
         # QR-DQN
         self.quantiles =config.QUANTILES
@@ -45,8 +52,8 @@ class DQNAgent(object):
         # Learn Procedure
         self.max_frames = config.MAX_FRAMES
         self.learn_start = config.LEARN_START
-        self.update_freq = config.UPDATE_FREQ
-        self.target_update_freq = config.TARGET_UPDATE_FREQ
+        self.update_freq = config.CURRENT_NET_UPDATE_FREQUENCY
+        self.target_update_freq = config.TARGET_NET_UPDATE_FREQUENCY
         self.update_count = 0
 
         # Log Info
@@ -150,15 +157,17 @@ class DQNAgent(object):
     def prep_minibatch(self):
         transitions, indices, weights = self.memory.sample(self.batch_size)
         batch_states, batch_actions, batch_rewards, batch_next_states = zip(*transitions)
+
+        batch_states_shape = (-1, ) + self.input_shape
         
         batch_states = torch.tensor(batch_states, device = self.device, dtype = torch.float).view(batch_states_shape)
         batch_actions = torch.tensor(batch_actions, device = self.device, dtype = torch.long).view(-1, 1)
         batch_rewards = torch.tensor(batch_rewards, device = self.device, dtype = torch.float).view(-1, 1)
 
-        non_final_mask = torch.tensor(tuple(map(lambda s : s is not None, batch_next_states)), device = self.device, dtype = torch.uint8)
+        non_final_mask = torch.tensor(tuple(map(lambda s : s is not None, batch_next_states)), device = self.device, dtype = torch.bool)
 
         try: #sometimes all next states are false
-            non_final_next_states = torch.tensor([s for s in batch_next_state if s is not None], device=self.device, dtype=torch.float).view(batch_states_shape)
+            non_final_next_states = torch.tensor([s for s in batch_next_states if s is not None], device=self.device, dtype=torch.float).view(batch_states_shape)
             empty_next_state_values = False
 
         except:
@@ -167,7 +176,7 @@ class DQNAgent(object):
 
         return batch_states, batch_actions, batch_rewards, non_final_next_states, non_final_mask, empty_next_state_values, indices, weights
 
-    def compute_loss(self):
+    def compute_loss(self, batch_vars):
         batch_state, batch_action, batch_reward, non_final_next_states, non_final_mask, empty_next_state_values, indices, weights = batch_vars
         
         # current-q-values
@@ -181,7 +190,7 @@ class DQNAgent(object):
                 # get_max_next_state_action
                 max_next_action = self.get_max_next_state_action(non_final_next_states)  # action selection comes from target model (not double)
                 self.target_model.sample_noise()
-                max_next_q_values[non_final_mask] = self.target_model(non_final_next_states).gather(1, max_next_state_action)
+                max_next_q_values[non_final_mask] = self.target_model(non_final_next_states).gather(1, max_next_action)
 
             target_q_values = batch_reward + (self.gamma ** self.nsteps) * max_next_q_values
         
@@ -191,7 +200,7 @@ class DQNAgent(object):
 
         return loss
 
-    def get_max_next_state_action(self, next_states):
+    def get_max_next_state_action(self, non_final_next_states):
         max_next_action = self.target_model(non_final_next_states).max(dim=1)[1].view(-1, 1)
         return max_next_action
 
@@ -201,7 +210,7 @@ class DQNAgent(object):
             self.target_model.load_state_dict(self.model.state_dict())
             self.update_count = 0
 
-    def get_action(self, s, eps):
+    def get_action(self, s, eps=0.1):
         with torch.no_grad():
             if np.random.random() >= eps or self.static_policy or self.noisy:
                 X = torch.tensor([s], device=self.device, dtype=torch.float)

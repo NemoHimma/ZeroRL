@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from noisy_layer import NoisyLinear
+from .noisy_layer import NoisyLinear
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
  
 class AtariBody(nn.Module):
     # input_shape: (num_channels, height, width)
-    # forward(x): (batch_size, num_chaneels, height, width)
+    # forward(x): (batch_size, num_channels, height, width)
 
     def __init__(self, input_shape, num_actions, noisy=False, sigma_init=0.5):
         super(AtariBody, self).__init__()

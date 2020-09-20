@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from bodies import SimpleBody , AtariBody
-from noisy_layer import NoisyLinear
+from .bodies import SimpleBody , AtariBody
+from .noisy_layer import NoisyLinear
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -133,7 +133,7 @@ class CategoricalDuelingDQN(nn.Module):
             self.adv2 = NoisyLinear(512, self.num_actions*self.atoms, sigma_init)
 
             self.val1 = NoisyLinear(self.body.feature_size(), 512, sigma_init)
-            self.val2 = NoisyLienar(512, self.atoms,sigma_init)
+            self.val2 = NoisyLinear(512, self.atoms, sigma_init)
 
     def forward(self, x):
         x = self.body(x)

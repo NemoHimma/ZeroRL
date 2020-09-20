@@ -2,6 +2,7 @@ import gym
 from gym.spaces import Box
 from baselines.common.atari_wrappers import *
 from baselines.common.wrappers import TimeLimit
+from baselines import bench
 
 class WrapPyTorch(gym.ObservationWrapper):
     def __init__(self, env=None):
@@ -30,4 +31,9 @@ def PrepareAtariEnv(env_id, log_dir):
     env = ClipRewardEnv(env)
     env = WrapPyTorch(env)
     return env
+
+    
+
+
+
 
