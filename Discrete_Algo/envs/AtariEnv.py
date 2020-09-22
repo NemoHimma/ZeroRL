@@ -17,11 +17,11 @@ class WrapPyTorch(gym.ObservationWrapper):
     def observation(self, observation):
         return observation.transpose(2, 0, 1)
 
-def PrepareAtariEnv(env_id, log_dir):
+def PrepareAtariEnv(env_id, log_dir, max_episode_steps = 3000):
     env = gym.make(env_id)
     env = NoopResetEnv(env, noop_max=30)
     env = MaxAndSkipEnv(env, skip=4)
-    env = TimeLimit(env, max_episode_steps=1000)
+    env = TimeLimit(env, max_episode_steps = max_episode_steps)
     env = bench.Monitor(env, os.path.join(log_dir, env_id))
     env = EpisodicLifeEnv(env)
     if 'FIRE' in env.unwrapped.get_action_meanings():
