@@ -18,6 +18,7 @@ class WrapPyTorch(gym.ObservationWrapper):
         return observation.transpose(2, 0, 1)
 
 def PrepareAtariEnv(env_id, log_dir, max_episode_steps = 3000):
+    print("max_episode_steps = {0}".format(max_episode_steps))
     env = gym.make(env_id)
     env = NoopResetEnv(env, noop_max=30)
     env = MaxAndSkipEnv(env, skip=4)

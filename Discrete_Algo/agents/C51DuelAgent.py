@@ -75,12 +75,14 @@ class C51DuelAgent(DQNAgent):
 
     def get_action(self, s, eps):
         with torch.no_grad():
+            if np.random.random() >= eps or self.static_policy or self.noisy:
                 X = torch.tensor([s], device=self.device, dtype=torch.float) 
                 self.model.sample_noise()
                 a = self.model(X) * self.supports
                 a = a.sum(dim=2).max(1)[1].view(1, 1)
                 return a.item()
-
+            else:
+                return np.random.randint(0, self.num_actions)
 
 # action selection from target_model which is not double
     def get_max_next_state_action(self, next_states):

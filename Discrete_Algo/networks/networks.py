@@ -160,7 +160,7 @@ class CategoricalDuelingDQN(nn.Module):
 
 class DuelingQRDQN(nn.Module):
     def __init__(self, input_shape, num_actions, noisy=False, quantiles=51, sigma_init=0.5, body=SimpleBody):
-        super(CategoricalDuelingDQN, self).__init__()
+        super(DuelingQRDQN, self).__init__()
 
         self.input_shape = input_shape
         self.num_actions = num_actions
