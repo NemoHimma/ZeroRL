@@ -17,7 +17,7 @@ from agents.DQNAgent import DQNAgent
 if __name__ == '__main__':
     start = timer()
     exp_name = 'DQN3'
-    log_dir = './'+ exp_name + '/' 
+    log_dir = './results/'+ exp_name + '/' 
     env_id = 'PongNoFrameskip-v4'
     
     try:

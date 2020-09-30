@@ -17,7 +17,7 @@ from agents.C51DuelAgent import C51DuelAgent
 if __name__ == '__main__':
     start = timer()
     exp_name = 'C51Duel'
-    log_dir = './'+ exp_name + '/' 
+    log_dir = './results/'+ exp_name + '/' 
     env_id = 'PongNoFrameskip-v4'
     
     try:

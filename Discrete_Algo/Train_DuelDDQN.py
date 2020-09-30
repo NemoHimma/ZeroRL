@@ -19,7 +19,7 @@ from agents.DuelDDQNAgent import DuelDDQNAgent
 if __name__ == '__main__':
     start = timer()
     exp_name = 'DuelDDQN3'
-    log_dir = './'+ exp_name + '/' 
+    log_dir = './results/'+ exp_name + '/' 
     env_id = 'PongNoFrameskip-v4'
     
     try:

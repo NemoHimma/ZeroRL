@@ -18,7 +18,7 @@ from agents.RainbowAgent import RainbowAgent
 if __name__ == '__main__':
     start = timer()
     exp_name = 'Rainbow'
-    log_dir = './'+ exp_name + '/' 
+    log_dir = './results/'+ exp_name + '/' 
     env_id = 'PongNoFrameskip-v4'
     
     try:

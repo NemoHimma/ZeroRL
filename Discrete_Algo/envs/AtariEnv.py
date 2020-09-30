@@ -4,6 +4,7 @@ from baselines.common.atari_wrappers import *
 from baselines.common.wrappers import TimeLimit
 from baselines import bench
 
+
 class WrapPyTorch(gym.ObservationWrapper):
     def __init__(self, env=None):
         super(WrapPyTorch, self).__init__(env)
@@ -32,6 +33,13 @@ def PrepareAtariEnv(env_id, log_dir, max_episode_steps = 3000):
     env = ClipRewardEnv(env)
     env = WrapPyTorch(env)
     return env
+
+
+
+
+
+
+
 
     
 
