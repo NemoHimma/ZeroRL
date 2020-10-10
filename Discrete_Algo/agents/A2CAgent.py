@@ -2,21 +2,38 @@ import torch
 import torch.optim as optim
 import numpy as np
 
-from networks.networks import ActorCritic
-from networks.bodies import MLPBody
+from networks.actor_critic import CNNActorCritic
 
 
+class FixedCategorical(torch.distributions.Categorical):
+    def sample(self):
+        return super().sample().unsqueeze(-1)
 
-# All the Agents shared RolloutBuffer in Parallel Setting so it doesn't have the declare_memory method
+    def log_probs(self, actions):
+        return (
+            super()
+            .log_prob(actions.squeeze(-1))
+            .view(actions.size(0), -1)
+            .sum(-1)
+            .unsqueeze(-1)
+        )
+
+    def mode(self):
+        return self.probs.argmax(dim=-1, keepdim=True)
+
+# This Agent doesn't have declare_memory() method because it is defined in the Interacation Part for parallel envs.
 
 class A2CAgent(object):
     def __init__(self, config=None, envs=None):
+        self.device = config.device
 
         self.envs = envs
         self.obs_shape = self.envs.observation_space.shape
         self.action_space = self.envs.action_space
+
         self.num_steps = config.num_steps
         self.num_processes = config.num_processes
+        
 
         self.lr = config.lr
         self.eps = config.eps
@@ -27,11 +44,11 @@ class A2CAgent(object):
         self.max_grad_norm = config.max_grad_norm
 
         # declare_networks()
-        self.actor_critic_model = ActorCritic(obs_shape=self.input_shape, action_space=self.action_space, body=MLPBody)
+        self.actor_critic_model = CNNActorCritic(input_shape=self.obs_shape, num_actions=self.action_space.n)
         self.actor_critic_model.to(self.device)
 
         # declare_optimizer()
-        self.optimizer = optim.RMSprop(actor_critic_model.parameters(), self.lr, eps=self.eps, alpha=self.alpha)
+        self.optimizer = optim.RMSprop(self.actor_critic_model.parameters(), self.lr, eps=self.eps, alpha=self.alpha)
 
 
 ################# Main Update Step #################
@@ -69,8 +86,9 @@ class A2CAgent(object):
 
 
     def evaluate_actions(self, inputs, actions):
-        critic_value, dist = self.actor_critic_model(inputs)
-
+        critic_value, logits = self.actor_critic_model(inputs)
+        dist = FixedCategorical(logits)
+        
         action_log_probs = dist.log_probs(actions)
         dist_entropy = dist.entropy().mean()
 
@@ -84,7 +102,10 @@ class A2CAgent(object):
 
 
     def get_action(self, inputs, deterministic = False):
-        critic_value, dist = self.actor_critic_model(inputs)
+        critic_value, logits = self.actor_critic_model(inputs)
+        
+        dist = FixedCategorical(logits)
+
         if deterministic:
             action = dist.mode()
         else:

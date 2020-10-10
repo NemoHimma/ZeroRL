@@ -1,5 +1,5 @@
 import gym
-import obs
+import os
 from baselines import bench
 from baselines.common.vec_env import VecEnvWrapper
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
@@ -8,13 +8,15 @@ from baselines.common.vec_env.vec_normalize import VecNormalize as VecNormalize_
 
 
 def PrepareMujocoEnv(env_id, seed, rank, log_dir, allow_early_resets):
-    env = gym.make(env_id)
-    env.seed(seed + rank)
-    if str(env.__class__.__name__).find('TimeLimit') >= 0:
-            env = TimeLimitMask(env)
+    def _thunk():
+        env = gym.make(env_id)
+        env.seed(seed + rank)
+        if str(env.__class__.__name__).find('TimeLimit') >= 0:
+                env = TimeLimitMask(env)
 
-    env = bench.Monitor(env, os.path.join(log_dir, str(rank)), allow_early_resets=allow_early_resets)
-    return env
+        env = bench.Monitor(env, os.path.join(log_dir, str(rank)), allow_early_resets=allow_early_resets)
+        return env
+    return _thunk
 
 def PrepareParallelEnv(env_id, seed, num_processes, gamma, log_dir, device, allow_early_resets):
     envs = [PrepareMujocoEnv(env_id, seed, i, log_dir, allow_early_resets) for i in range(num_processes)]

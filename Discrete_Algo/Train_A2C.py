@@ -2,9 +2,10 @@ import torch
 import os, glob
 from collections import deque
 import time
+from tqdm import tqdm
 
-from utils.hyperparameters import Config
-from envs.PrepareMujoco import PrepareParallelEnv
+from utils.PGhyperparameters import Config
+from envs.ikostrov_envs import make_vec_envs
 from agents.A2CAgent import A2CAgent
 from buffer.rollout import RolloutBuffer
 
@@ -27,18 +28,16 @@ if __name__ == '__main__':
     
     # appoint log_dir & create
     train_log_dir = './A2C/train/'
-    eval_log_dir = './A2C/eval/'
 
     makedirCleanUp(train_log_dir)
-    makedirCleanUp(eval_log_dir)
 
     # appoint num_thread & device
     torch.set_num_threads(1)
     config.device = torch.device("cuda:0")
 
     # create envs
-    env_id = "Ant-v2"
-    envs = PrepareParallelEnv(env_id, config.seed, config.num_processes, config.gamma, train_log_dir, config.device, False)
+    env_id = 'PongNoFrameskip-v4'
+    envs = make_vec_envs(env_id, config.seed, config.num_processes, train_log_dir, config.device, False)
 
     # Agent
     a2cAgent = A2CAgent(config, envs)
@@ -48,15 +47,15 @@ if __name__ == '__main__':
 
 
     # Initialization
-    obs = envs.reset()
+    obs = envs.reset()  # all tensor operations / pay attention to this
     rollouts.obs[0].copy_(obs)  # has stored initial obs
-    rollouts.to(config.device)
+    rollouts.to_device(config.device)
 
     episode_rewards = deque(maxlen=10)
 
     start = time.time()
     
-    for i in range(config.num_updates):
+    for i in tqdm(range(config.num_updates)):
         # Decay the Learning Rate If Necessary
         if config.USE_DECAY_LR:
             config.LinearDecayLR(a2cAgent.optimizer, i , config.num_updates, config.lr)
@@ -64,7 +63,7 @@ if __name__ == '__main__':
         for step in range(config.num_steps):
             # sample action
             with torch.no_grad():
-                values, action, action_log_probs = a2cAgent.get_action(obs[step])
+                values, action, action_log_probs = a2cAgent.get_action(rollouts.obs[step]) # (1, num_processes, frame_stack_channels, h, w)
 
             # excute action in envs
             obs, rewards, done, infos = envs.step(action)
@@ -74,7 +73,7 @@ if __name__ == '__main__':
             
             # process masks & bad_masks
             masks = torch.FloatTensor([[0.0] if done_ else [1.0] for done_ in done])
-            bad_masks = torch.FloatTensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos])
+            bad_masks = torch.FloatTensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos])  # TimeLimitMask Wrapper
             
             # store(obs, actions, action_log_probs, values, rewards, masks, bad_masks)
             rollouts.insert(obs, action, action_log_probs, values, rewards, masks, bad_masks)
@@ -83,7 +82,7 @@ if __name__ == '__main__':
         with torch.no_grad():
             next_value = a2cAgent.get_critic_value(rollouts.obs[-1]).detach()
 
-        # conpute return
+        # compute return
         rollouts.compute_returns(next_value, config.USE_GAE, config.gamma, config.gae_lambda, config.USE_PROPER_TIME_LIMITS)
 
         # update

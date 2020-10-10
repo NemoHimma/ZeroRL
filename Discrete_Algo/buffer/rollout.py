@@ -73,7 +73,7 @@ class RolloutBuffer(object):
         self.value_preds[-1] = next_value
         gae = 0
         # gae_t = \sum_{l=0}^{\infty} (\lambda \gamma)^l \delta_{t}  \lambda summing up and discount multi-step advantage estimator
-        if proper_time_limits = True:
+        if proper_time_limits == True:
                  
             for step in reversed(range(self.num_steps)): # index over num_steps-1,...,0
                 # \delat_t = r_t + \gamma * V(s_t) - V(s_{t-1})
