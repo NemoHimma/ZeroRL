@@ -27,11 +27,11 @@ if __name__ == '__main__':
     torch.cuda.manual_seed_all(config.seed)
     
     # appoint log_dir & create
-    train_log_dir = './A2C/train/'
+    train_log_dir = './results/A2C/'
 
     makedirCleanUp(train_log_dir)
 
-    # appoint num_thread & device
+    # appoint num_thread for parallel envs & device
     torch.set_num_threads(1)
     config.device = torch.device("cuda:0")
 

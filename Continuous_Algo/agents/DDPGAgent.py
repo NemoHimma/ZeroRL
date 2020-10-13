@@ -127,7 +127,7 @@ class DDPGAgent(object):
         with torch.no_grad():
             a = self.model.actor(obs).numpy()
         
-        # Add Noise
+        # Add Noise when training But Test with noisy_scale = 0
         a += noisy_scale * np.random.randn(self.act_dim)
 
         return np.clip(a, -self.act_limit, self.act_limit)

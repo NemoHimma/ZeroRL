@@ -54,12 +54,14 @@ episode_len = 0
 total_num_steps = config.epochs * config.per_epoch_steps
 # Main Trainning Loop
 for timestep in tqdm(range(total_num_steps)):
-
+    #############################
+    # Explore or Exploit 
     if timestep > config.start_to_exploit_steps:
+        # When Exploit , Add Some Noise
         action = agent.get_action(obseration, config.action_noise)
     else: 
         action = env.action_space.sample()
-
+###################################
     prev_observation = observation
 
     observation, reward, done , _ = env.step(action)
@@ -81,7 +83,7 @@ for timestep in tqdm(range(total_num_steps)):
     if (timestep+1) % config.per_epoch_steps == 0:
         epoch = (t + 1) // config.per_epoch_steps
 
-        if (epoch % config.save_model_freq == 0) or (epoch == epochs):
+        if (epoch % config.save_model_freq == 0) or (epoch == config.epochs):
             torch.save(agent.model.parameters(), os.path.join(log_dir,'ddpg_model.pt'))
 
     
