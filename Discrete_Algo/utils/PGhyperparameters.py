@@ -24,11 +24,12 @@ class Config(object):
         self.eps = 1e-5 # RMSprop epsilon
         self.alpha = 0.99 # RMSprop alpha
 
+        self.num_mini_batch = 8
 
-        self.num_envs_steps = 10e6
+        self.num_envs_steps = 1e7
         self.num_updates = int(self.num_envs_steps // self.num_steps // self.num_processes)
 
-        self.USE_DECAY_LR = False
+        self.USE_DECAY_LR = True
         self.USE_PROPER_TIME_LIMITS = True
 
         ### save or log

@@ -2,6 +2,11 @@ import torch
 from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
 class RolloutBuffer(object):
+
+    '''
+    
+    '''
+
     def __init__(self, num_steps, num_processes, obs_shape, action_space):
         # (obs, act, reward)
         self.obs = torch.zeros(num_steps+1, num_processes, *obs_shape)   # (obs[0] = init_obs)
@@ -42,6 +47,7 @@ class RolloutBuffer(object):
         self.action_log_probs = self.action_log_probs.to(device)
         self.value_preds = self.value_preds.to(device)
         self.returns = self.returns.to(device)
+        
         self.masks = self.masks.to(device)
         self.bad_masks = self.bad_masks.to(device)
 
@@ -73,6 +79,9 @@ class RolloutBuffer(object):
         self.value_preds[-1] = next_value
         gae = 0
         # gae_t = \sum_{l=0}^{\infty} (\lambda \gamma)^l \delta_{t}  \lambda summing up and discount multi-step advantage estimator
+
+        # Advantages Caculation also can use OpenAI SpinningUp Way
+        
         if proper_time_limits == True:
                  
             for step in reversed(range(self.num_steps)): # index over num_steps-1,...,0
