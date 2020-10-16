@@ -2,11 +2,14 @@ import os
 import glob
 import time
 import torch
+import numpy as np
+
 from tqdm import tqdm
 from collections import deque
 
 from utils.PGhyperparameters import Config
 from envs.ikostrov_envs import make_vec_envs, VecNormalize
+
 from agents.PPOAgent import PPOAgent
 
 
@@ -54,7 +57,6 @@ if __name__ == '__main__':
     config.num_processes = 8
     total_epochs = int(config.num_envs_steps // config.num_steps // config.num_processes)
 
-
     # create envs which is specificed by num_processes
     env_id = 'PongNoFrameskip-v4'
     envs = make_vec_envs(env_id, config.seed, config.num_processes, log_dir, config.device, False) # allow_early_resets = False
@@ -65,11 +67,11 @@ if __name__ == '__main__':
     # Predefined Variable For Training Loop
     obs = envs.reset() # The envs have been wrapped by VecPytorch
     ppoAgent.rollouts.obs[0].copy_(obs)
-    ep_rews = deque(maxlen = 10)
+    episode_rewards = deque(maxlen = 10)
 
     start = time.time()
 
-    for epoch in tqdm(range(total_epochs)):
+    for i in tqdm(range(total_epochs)):
         # prepare_exploration_strategy_for_epochs()    (ignored)
         for step in range(config.num_steps):
             # get_action with exploration_strategy_for_steps()  (implemented in get_action)
@@ -81,20 +83,34 @@ if __name__ == '__main__':
             # log ep_rews info
             for info in infos:
                 if 'episode' in info.keys():
-                    ep_rews.append(info['episode']['r'])
+                    episode_rewards.append(info['episode']['r'])
 
             masks = torch.FloatTensor([[0.0] if done_ else [1.0] for done_ in dones])  # One Done For Observations
             bad_masks = torch.FloatTensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos])
 
-            ppoAgent.rollouts.store(obs, acts, rewards, action_log_probs, value_preds, masks, bad_masks)
+            ppoAgent.rollouts.store(obs, actions, rewards, action_log_probs, values, masks, bad_masks)
         
         # update : num_mini_batch * mini_batch_size = config.num_processes * config.num_steps (aka config.rollouts_size) 
         value_loss, policy_loss, dist_entropy = ppoAgent.update()
         
-
         # reset buffer which is written into ppoAgent.update()
     
         # log the info you want for every epoch
+        if (((i+1) % config.save_model_freq == 0) or ((i+1) % config.num_updates ==0)) :
+            
+            torch.save([ppoAgent.actor_critic_model, getattr(get_vec_normalize(envs), 'ob_rms', None)], os.path.join(log_dir , env_id + ".pt"))
+
+        if ((i+1) % config.episode_rewards_freq ==0) and len(episode_rewards) > 1:
+            total_num_steps = (i + 1) * config.num_processes * config.num_steps
+            end = time.time()
+            print(
+                "Updates {}, num timesteps {}, FPS {} \n Last {} training episodes: mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}\n"
+                .format(i, total_num_steps,
+                        int(total_num_steps / (end - start)),
+                        len(episode_rewards), np.mean(episode_rewards),
+                        np.median(episode_rewards), np.min(episode_rewards),
+                        np.max(episode_rewards), dist_entropy, value_loss,
+                        policy_loss))        
 
 
             

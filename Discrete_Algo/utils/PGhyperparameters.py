@@ -25,12 +25,15 @@ class Config(object):
         self.alpha = 0.99 # RMSprop alpha
 
         self.num_mini_batch = 8
+        self.clip_ratio = 0.2
+        self.ppo_epoch = 3
 
         self.num_envs_steps = 1e7
         self.num_updates = int(self.num_envs_steps // self.num_steps // self.num_processes)
 
         self.USE_DECAY_LR = True
         self.USE_PROPER_TIME_LIMITS = True
+        self.USE_CLIPPED_VALUE_LOSS = True
 
         ### save or log
         self.save_model_freq = 100
