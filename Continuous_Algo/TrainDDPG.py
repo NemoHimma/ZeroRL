@@ -14,6 +14,9 @@ from utils.ddpghyperparameters import Config
 
 from baselines import bench
 
+if __name__ == '__main__':
+   #mpi_fork(args.cpu)
+
     start = timer()
 
 # Configuration 
@@ -44,47 +47,48 @@ from baselines import bench
     env = bench.Monitor(env, os.path.join(log_dir)) # record reward, length, time
 
 # Agent
-    agent = DDPGAgent(config, env)
+    agent = DDPGAgent(config, env)]
 
-# Predefined Variable
-episode_reward = 0
-observation = env.reset()
-episode_len = 0
+    # Predefined Variable
+    episode_reward = 0
+    observation = env.reset()
+    episode_len = 0
 
-total_num_steps = config.epochs * config.per_epoch_steps
-# Main Trainning Loop
-for timestep in tqdm(range(total_num_steps)):
-    #############################
-    # Explore or Exploit 
-    if timestep > config.start_to_exploit_steps:
-        # When Exploit , Add Some Noise
-        action = agent.get_action(obseration, config.action_noise)
-    else: 
-        action = env.action_space.sample()
-###################################
-    prev_observation = observation
+    num_epsiodes = config.num_epsiodes
+    
+    # Main Trainning Loop
+    for timestep in tqdm(range(total_num_steps)):
+        #############################
+        # Explore or Exploit 
+        if timestep > config.start_to_exploit_steps:
+            # When Exploit , Add Some Noise
+            action = agent.get_action(obseration, config.action_noise)
+        else: 
+            action = env.action_space.sample()
+    ###################################
+        prev_observation = observation
 
-    observation, reward, done , _ = env.step(action)
-    episode_reward += reward
-    episode_len += 1
+        observation, reward, done , _ = env.step(action)
+        episode_reward += reward
+        episode_len += 1
 
-    if episode_len == config.max_episode_len:
-        done = False
+        if episode_len == config.max_episode_len:
+            done = False
 
-    agent.model.train()
+        agent.model.train()
 
-    agent.update(prev_observation, action, reward, observation, done, timestep)
+        agent.update(prev_observation, action, reward, observation, done, timestep)
 
-# If done reset 
-    if done or (episode_len == config.max_episode_len):
-        observation, episode_reward, episode_len = env.reset(), 0 , 0
+    # If done reset 
+        if done or (episode_len == config.max_episode_len):
+            observation, episode_reward, episode_len = env.reset(), 0 , 0
 
-# Save & log
-    if (timestep+1) % config.per_epoch_steps == 0:
-        epoch = (t + 1) // config.per_epoch_steps
+    # Save & log
+        if (timestep+1) % config.per_epoch_steps == 0:
+            epoch = (timestep + 1) // config.per_epoch_steps
 
-        if (epoch % config.save_model_freq == 0) or (epoch == config.epochs):
-            torch.save(agent.model.parameters(), os.path.join(log_dir,'ddpg_model.pt'))
+            if (epoch % config.save_model_freq == 0) or (epoch == config.epochs):
+                torch.save(agent.model.parameters(), os.path.join(log_dir,'ddpg_model.pt'))
 
     
 

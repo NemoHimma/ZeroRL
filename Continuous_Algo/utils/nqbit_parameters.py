@@ -7,8 +7,8 @@ class Config(object):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.seed = 1
         
-        self.max_episode_steps= 3000
-        self.num_episodes = 10000
+        self.per_epoch_steps = 20
+        self.epochs = 1000
 
         self.buffer_size = int(1e6) 
         self.batch_size = 64
@@ -23,6 +23,8 @@ class Config(object):
         self.start_to_exploit_steps = 10000
         self.update_freq = 5
         
+
+        self.max_episode_len = 3000
         self.action_noise = 0.1
 
         ### save or log
