@@ -17,12 +17,14 @@ class Config(object):
         self.value_lr = 1e-4 # critic_lr
         self.gamma = 0.99 # discount factor
         self.polyak = 0.995 # polyak update rate
+        self.target_noise = 0.02
         
-        self.learn_start_steps = int(2e4) # 20000steps, 10episodes
-        self.start_to_exploit_steps = int(1e4) # 10000steps, 5episodes
+        self.learn_start_steps = 4000 # 20000steps, 10episodes
+        self.start_to_exploit_steps = 3000
         
-        self.action_noise = 0.01
+        self.action_noise = 0.02
         self.update_freq = 5
+        self.policy_decay = 5
 
         ### save or log
         self.save_model_freq = 50 #episodes
@@ -30,10 +32,13 @@ class Config(object):
     
     
 
-    def LinearDecayLR(self, optimizer, epoch, num_epochs, initial_lr):
-        lr = initial_lr * (1.0 - (epoch/ float(num_epochs)))
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
+    def LinearDecayActionNoise(self, episode):
+        action_noise = self.action_noise * (1.0 - (episode/ float(self.num_episodes)))
+        return action_noise
+
+    def LinearDecayTargetNoise(self, episode):
+        target_noise = self.target_noise * (1.0 - (episode/float(self.num_episodes)))
+        return target_noise
 
     
 

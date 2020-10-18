@@ -9,14 +9,14 @@ from collections import deque
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import Config  
 from envs.Nqubits import NqubitEnv  # Env
-from agents.DDPGAgent import DDPGAgent # Agent
+from agents.TD3Agent import TD3Agent # Agent
 
 if __name__ == '__main__':
     config = Config()
     start = timer()
 
     train_log_dir = './results/'
-    algo_name = 'ddpg/'
+    algo_name = 'td3/'
     log_dir = train_log_dir + algo_name
     writer = SummaryWriter(log_dir)
     
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     act_limit = env.action_space.high[0]
 
     # Agent
-    agent = DDPGAgent(config, env)
+    agent = TD3Agent(config, env)
 
     # Predefined Variable
     
@@ -49,11 +49,13 @@ if __name__ == '__main__':
         obs = env.reset()
         episode_reward = []
         running_reward = deque(maxlen = 100)
+        action_noise = config.LinearDecayActionNoise(episode)
+        target_noise = config.LinearDecayTargetNoise(episode)
     # Explore or Exploit
-        for step in range(config.max_episode_steps):
+        for step in range(config.max_episode_steps): # 1000
             timestep = episode * config.max_episode_steps + step + 1
-            if timestep > config.start_to_exploit_steps:  #10000 steps
-                action = agent.get_action(obs, config.action_noise) # log_the_action if you want to
+            if timestep > config.start_to_exploit_steps:  #3000 steps
+                action = agent.get_action(obs, action_noise) # log_the_action if you want to
             else:
                 action = env.action_space.sample()
 
@@ -74,8 +76,8 @@ if __name__ == '__main__':
             agent.buffer.store(prev_obs, action, reward, obs)
 
             if timestep > config.learn_start_steps:
-                if (step > 50) and (step % 2 == 0):  # Choose When to Update
-                    value_loss, policy_loss = agent.update()
+                if (step > 50) and (step % 50 == 0):  # Choose When to Update
+                    value_loss, policy_loss = agent.update(50, target_noise)
                 # log info
                     writer.add_scalar('value_loss', value_loss, timestep)
                     writer.add_scalar('policy_loss', policy_loss, timestep)
@@ -84,9 +86,9 @@ if __name__ == '__main__':
             if (reward >= -1.0):
                 tmp = obs
                 
-                if os.path.isfile(os.path.join(log_dir, 'ddpg_model.dump')):
-                    test_agent = DDPGAgent(config, env)
-                    test_agent.model.load_state_dict(torch.load(os.path.join(log_dir, 'ddpg_model.dump')))
+                if os.path.isfile(os.path.join(log_dir, 'td3_model.dump')):
+                    test_agent = TD3Agent(config, env)
+                    test_agent.model.load_state_dict(torch.load(os.path.join(log_dir, 'td3_model.dump')))
                     
                     for _ in range(50):
                         obs = torch.from_numpy(obs).to(config.device)
@@ -116,7 +118,7 @@ if __name__ == '__main__':
                 np.max(running_reward)))
 
                 if ((episode + 1) % config.save_model_freq == 0) or ((episode+1) == config.num_episodes):
-                    torch.save(agent.model.state_dict(), os.path.join(log_dir, 'ddpg_model.dump'))
+                    torch.save(agent.model.state_dict(), os.path.join(log_dir, 'td3_model.dump'))
         writer.add_scalar('episode_reward', np.mean(episode_reward), episode)
 
     
