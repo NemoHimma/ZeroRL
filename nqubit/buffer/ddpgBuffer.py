@@ -24,19 +24,19 @@ class DDPGReplayBuffer(object):
 
         self.next_obs_buf = np.zeros(combined_shape(buffer_size, obs_dim), dtype=np.float32)
 
-        #self.done_buf = np.zeros(buffer_size, dtype=np.uint8)
+        self.done_buf = np.zeros(buffer_size, dtype=np.uint8)
         
         # pointer, if buffer is not full , buffer_size
         self.pointer, self.size, self.max_size = 0, 0, buffer_size
 
-    def store(self, obs, act, rew, next_obs):
+    def store(self, obs, act, rew, next_obs, done):
 
         self.obs_buf[self.pointer] = obs
         self.next_obs_buf[self.pointer] = next_obs
 
         self.acts_buf[self.pointer] = act
         self.rew_buf[self.pointer] = rew
-        #self.done_buf[self.pointer] = done
+        self.done_buf[self.pointer] = done
 
         self.pointer = (self.pointer+1) % self.max_size
 

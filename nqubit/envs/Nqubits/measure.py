@@ -66,7 +66,7 @@ def CalcuFidelity(n,p,Hb,Hp_array,T,g):
 				psi = psi/np.linalg.norm(psi)
 
 				for site in range(lenthsite):
-					c += float(np.log10((abs(psi[find_site[site]]**2))))
+					c += float(np.log((abs(psi[find_site[site]]**2))))
 
 				C.append(c)
 		averageSuccess += C[-1]/lenthNumbers

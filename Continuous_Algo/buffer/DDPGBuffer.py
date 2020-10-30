@@ -10,12 +10,13 @@ def combined_shape(length, shape=None):
 class DDPGReplayBuffer(object):
     
     '''
-    Simple Buffer For DDPG , Store the Experience In Cpu
+    Simple Buffer For DDPG , Store the Experience In Cpu Memory
     '''
 
     def __init__(self, obs_dim, act_dim, buffer_size):
         super(DDPGReplayBuffer, self).__init__()
         # s,a,r,s_, done
+        
         self.obs_buf = np.zeros(combined_shape(buffer_size, obs_dim), dtype=np.float32)
         
         self.acts_buf = np.zeros(combined_shape(buffer_size, act_dim), dtype=np.float32)

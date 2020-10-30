@@ -40,7 +40,7 @@ class TD3Agent(object):
 
         # Initilization & Optimizer
         
-        self.target_model.load_state_dict((self.model.state_dict()))
+        self.target_model.load_state_dict(self.model.state_dict())
 
         self.actor_optimizer = optim.Adam(self.model.actor.parameters(), lr = self.policy_lr)
         self.critic1_optimizer = optim.Adam(self.model.critic1.parameters(), lr = self.value_lr)
@@ -65,12 +65,12 @@ class TD3Agent(object):
 
 ##################### Key Update Part ##########################
 
-    def update(self, times, target_noise):
+    def update(self, update_times, target_noise):
         # if num_step < self.learn_start_steps:
         #    return None
         value_log = []
         policy_log = []
-        for i in range(times):
+        for i in range(update_times):
             batch_data = self.prep_minibatch(self.batch_size)
 
             value1_loss, value2_loss = self.compute_value_loss(batch_data, target_noise)
@@ -163,7 +163,7 @@ class TD3Agent(object):
 
         # DDPG Style To choose action not a* = argmax_a Q(s,a)
         with torch.no_grad():
-            next_acts = self.target_model.actor(next_obs)  # action selection from target_model
+            next_acts = self.target_model.actor(next_obs)  # action selection from target_model which SAC use current model
 
             # Smoothing Targe Policy (Can Tune the hyperparameters)
             epsilon = torch.randn_like(next_acts) * target_noise

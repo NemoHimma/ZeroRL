@@ -94,7 +94,7 @@ class NqubitEnv2(gym.Env):
         super(NqubitEnv2, self).__init__()
 
         self.action_space = spaces.Box(low = -0.01, high = 0.01, shape = (6, ), dtype = np.float32)
-        self.observation_space = spaces.Box(low = -float('inf'), high = float('inf'), shape=(6, ),dtype = np.float32)
+        self.observation_space = spaces.Box(low = -0.5 , high = 0.5, shape=(6, ),dtype = np.float32)
 
         self.nbits = 5 # n 
         
@@ -104,34 +104,49 @@ class NqubitEnv2(gym.Env):
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
 
         self.done = False
+        self.counter = 0
 
         self.state = None  # s
         self.Pi = np.pi
 
 
     def step(self, action):
+        self.counter += 1
         current_obs = self.state
         
         for i in range(6):
             self.state[i] += action[i]
 
+        self.state = np.clip(self.state, -0.5, 0.5)
+
         # Expert Prior Constraint of Path
-        t = np.linspace(0, self.T, 1000)
+        #t = np.linspace(0, self.T, 1000)
 
-        path = t/self.T + np.sum([self.state[i] * np.sin((t/self.T)*(i+1)* self.Pi) for i in range(6)])
+        '''
+        path = (t/self.T)**2 + np.sum([self.state[i] * np.sin((t/self.T)*(i+1)* self.Pi) for i in range(6)])
         strictly_increasing = all(x<=y for x,y in zip(path[:], path[1:]))
+        '''
 
-        if strictly_increasing:
-            reward = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
-            return self.state, reward, self.done, {}
-        else:
-            reward = measure.CalcuFidelity(self.nbits, current_obs, self.Hb, self.Hp_array, self.T, self.g)
-            return current_obs, reward, self.done, {}
+        if self.counter == 1000:
+            self.done = True
+
+        
+        #if strictly_increasing:
+        reward = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
+        
+        return self.state, reward, self.done, {}
+
+        #else:
+       #     reward = measure.CalcuFidelity(self.nbits, current_obs, self.Hb, self.Hp_array, self.T, self.g)
+       #     return current_obs, reward, self.done, {}
+    
+       # return self.state, reward, self.done, {}
         
 
     def reset(self):
         self.state = np.zeros(shape= (6, ), dtype=np.float32)
         self.done = False
+        self.counter = 0
         return self.state
 
     def MakeMatrix(self, n , Numbers):
