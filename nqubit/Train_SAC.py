@@ -7,116 +7,131 @@ from timeit import default_timer as timer
 from datetime import timedelta
 
 from collections import deque
-from torch.autograd import Variable
-
-
 from tensorboardX import SummaryWriter
-from utils.nqbit_parameters import Config  
-from envs.Nqubits import NqubitEnv  # Env
+from utils.nqbit_parameters import get_args  
+
+from energy_env.NqubitEnv import NqubitEnv2  # Env
+
 from agents.SACAgent import SACAgent # Agent
 
+
+
 if __name__ == '__main__':
-    config = Config()
+    args = get_args()
     start = timer()
 
-    train_log_dir = './results/'
-    algo_name = 'sac_exp_reward/'
-    log_dir = train_log_dir + algo_name
+
+    # log dir & summary writer
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    train_log_dir = '/results/'
+
+    algo_name = 'sac_energy_new/' + 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size' + str(args.batch_size)
+
+    log_dir = current_dir + train_log_dir + algo_name
+    
     writer = SummaryWriter(log_dir)
     try:
         os.makedirs(log_dir)
     except OSError:
         pass
+    
 
-    # Specific Configuration for SAC
-    config.alpha = 0.02
-    config.device = torch.device("cuda:1")
+    # Device
+    device = torch.device("cuda:0")
 
     # RNG
-    np.random.seed(config.seed)
-    torch.manual_seed(config.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
 
     # Env
-    env, test_env = NqubitEnv.NqubitEnv2(), NqubitEnv.NqubitEnv2()
-    act_limit = env.action_space.high[0]
+    env, test_env = NqubitEnv2(args.max_episode_steps), NqubitEnv2(args.max_episode_steps)
+    
 
     # Agent
-    agent = SACAgent(config, env)
+    agent = SACAgent(args, env, log_dir, device)
 
 
     # Training Loop
-    for episode in tqdm(range(config.num_episodes)):
-        obs = env.reset()
+    for episode in tqdm(range(args.num_episodes)): # int(1e6)
+        obs = env.reset()  # (9, )
         episode_reward = []
-        running_reward = deque(maxlen = 20)
 
-        for step in range(config.max_episode_steps):
-            timestep = episode * config.max_episode_steps + step + 1
+        for step in range(args.max_episode_steps): # (0, 1, 2)
+            timestep = episode * args.max_episode_steps + step + 1
             
             # This if-else is used to increase initial exploration 
-            if timestep > config.start_to_exploit_steps:
+            if timestep > args.start_to_exploit_steps:   # 900
                 action = agent.get_action(obs, deterministic = False)
             else:
                 action = env.action_space.sample()
 
             # Excute
             prev_obs = obs
-            obs, reward, done, _ = env.step(action)
+            obs, reward, done, info = env.step(action)
             
-            # log info
-            writer.add_scalar('Step_Reward', reward, timestep)
             episode_reward.append(reward)
-            running_reward.append(reward)
+            # log info
+                      
 
             # store ( sometimes is wrote into agent.update )
             agent.buffer.store(prev_obs, action, reward, obs, done)
 
             # when to update & how often we update
-            if timestep > config.learn_start_steps:
-                if ((step + 1) >= 50) and ((step + 1) % 50 == 0):
-                    value_loss, policy_loss = agent.update(50, timestep)
+            if timestep > args.learn_start_steps:
+                    value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, timestep)
                     
                     writer.add_scalar('value_loss', value_loss, timestep)
                     writer.add_scalar('policy_loss', policy_loss, timestep)
+                    writer.add_scalar('log_prob', log_prob_mag, timestep)
+                    writer.add_scalar('q_value_prob', q_value_mag, timestep)
+            
             
             # log_state & action
-            if (step + 1) % 50 == 0:
-                writer.add_scalars('state_value', {'s0':obs[0], 's1':obs[1], 's2':obs[2], 's3':obs[3], 's4':obs[4], 's5':obs[5]}, timestep)
+            if timestep % args.log_state_action_steps == 0:
+                
+                writer.add_scalars('state_value', {'s0':obs[-6], 's1':obs[-5], 's2':obs[-4], 's3':obs[-3], 's4':obs[-2], 's5':obs[-1]}, timestep)
                 writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, timestep)
 
             # test_agent
-            if (reward >= -2.30):
-                tmp = obs
-                count = 0
-                for _ in range(200):
-                    count += 1
-                    action = agent.get_action(obs, deterministic = True)
-                    obs, reward, done, _ = env.step(action)
+            if info and (info['threshold'] >= -1.0):
+                print('find one threshold satisfied -1.0')
+                print("threshold:{0}, solution:{1}".format(threshold, info['solution']))
+                avg_reward = 0.
+                test_episodes = 5
+                for _ in range(test_episodes):
+                    obs, done, ep_rew  = test_env.reset(), False, 0.0
+                    for i in range(args.max_episode_steps): # 3
+                        action = agent.get_action(obs, deterministic = True)
+                        next_obs, reward, done, info = env.step(action)
+                        ep_rew += reward
+                        obs = next_obs
 
-                    if (reward < -1.0):
-                        obs = tmp
-                        print("still learning")
-                        break
-
-                if count == 200:
-                    print("reach the goal")
-                    print("final_state is {0}".format(obs))
-                    writer.add_scalars('success_state_value', {'s0':obs[0],'s1':obs[1], 's2':obs[2], 's3':obs[3], 's4':obs[4], 's5':obs[5]}, episode)
+                    avg_reward += ep_rew
+                
+                avg_reward /= test_episodes
             
- 
+                torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
+                writer.add_scalar('test_episode_reward', avg_reward, timestep)
 
-        if (episode + 1) % config.print_freq == 0:
-            end = timer()
-            print("Train Time:{}, episode:{}, mean/median reward {:.4f}/{:.4f}, min/max reward {:.4f}/{:.4f}".format(timedelta(seconds = int(end - start)), episode + 1, 
-                np.mean(running_reward),
-                np.median(running_reward),
-                np.min(running_reward),
-                np.max(running_reward)))
+      
+        writer.add_scalar('threshold', info['threshold'], episode)
+        writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
-        if ((episode + 1) % config.save_model_freq == 0) or ((episode + 1) == config.num_episodes):
-            torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
+    env.close()
+    test_env.close()
+    writer.close()
 
-        writer.add_scalar('episode_reward', np.mean(episode_reward), episode)
+                
+            
+ # def main(args, log_dir):
+    #pass
+
+# if __name__ == '__main__':
+#   for arg in args:
+#      log_dir = functionOfArg(arg)
+#      main(log_dir, arg)
+# how to evaluate the hyperparameters properly
+
 
 
             

@@ -44,6 +44,8 @@ class TwinQNetwork(nn.Module):
 
         return Q1, Q2
 
+
+
 class GaussianPolicy(nn.Module):
     def __init__(self, obs_dim, act_dim, hidden_size, act_limit):
         super().__init__()

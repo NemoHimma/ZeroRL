@@ -6,8 +6,6 @@ import numpy as np
 
 from buffer.ddpgBuffer import DDPGReplayBuffer
 from networks.sac_model import GaussianActorMLPCritic
-from agents.TD3Agent import TD3Agent
-from tensorboardX import SummaryWriter
 
 import itertools
 
@@ -18,24 +16,66 @@ update() : prep_minibatch() , get_action(), compute_policy_loss(), compute_value
 create : declare_networks(), declare_memory(), declare_optimizers()
 '''
 
-class SACAgent(TD3Agent):
+class SACAgent(object):
     # No need to rewrite prep_minibatch(), declare_memory()
-    def __init__(self, config, env):
-        super(SACAgent, self).__init__(config, env)
-        self.alpha = 0.02
-        self.policy_decay = 2
-        self.log_dir = './results/sac_exp_reward/'
-        self.writer = SummaryWriter(self.log_dir)
+    def __init__(self, args, env, log_dir, device):
+        
+        # args
+        self.alpha = args.alpha
+        self.policy_decay = args.policy_decay
+        self.value_lr = args.value_lr
+        self.policy_lr = args.policy_lr
+        self.polyak = args.polyak
+        self.gamma = args.gamma
+        self.batch_size = args.batch_size
+
+
+        # declare_networks & declare_memory
+
+        self.net_kwargs = {'actor_hidden_size':args.actor_hidden_size,
+        'critic_hidden_size':args.critic_hidden_size,
+        'actor_log_std_min':args.actor_log_std_min,
+        'actor_log_std_max':args.actor_log_std_max}
+
+        self.env = env
+        self.obs_dim = env.observation_space.shape[0]
+        self.act_dim = env.action_space.shape[0]
+        self.act_limit = env.action_space.high[0]
+        self.observation_space = env.observation_space
+        self.action_space = env.action_space
+        self.buffer_size = args.buffer_size
+
+        # log_dir & device
+        self.log_dir = log_dir
+        self.device = device
+
+        self.declare_networks()
+        self.declare_memory()
+
+        self.target_model.load_state_dict(self.model.state_dict())
+
+        # declare_optimizer
         self.critic_optimizer = optim.Adam(itertools.chain(self.model.critic1.parameters(), self.model.critic2.parameters()), lr = self.value_lr)
+        self.actor_optimizer = optim.Adam(self.model.actor.parameters(), lr = self.policy_lr)
+
+        self.model = self.model.to(self.device)
+        self.target_model = self.target_model.to(self.device)
+        
+        # Freeze Target
+        for param in self.target_model.parameters():
+            param.requires_grad = False
 
     def declare_networks(self):
-        self.model = GaussianActorMLPCritic(self.observation_space, self.action_space)
-        self.target_model = GaussianActorMLPCritic(self.observation_space, self.action_space)
+        self.model = GaussianActorMLPCritic(self.observation_space, self.action_space, **self.net_kwargs)
+        self.target_model = GaussianActorMLPCritic(self.observation_space, self.action_space, **self.net_kwargs)
+    
+    def declare_memory(self):
+        self.buffer = DDPGReplayBuffer(self.obs_dim, self.act_dim, self.buffer_size)
 
 
     def get_action(self, obs, deterministic = False):
         # deterministic = True means Test the model
-        obs = torch.as_tensor(obs).to(self.device)
+        obs = torch.as_tensor(obs, dtype = torch.float32).to(self.device)
         with torch.no_grad():
             action, _ = self.model.actor(obs, deterministic, False) # not calculate the action part (with_prob = False)
         action = action.cpu().numpy()
@@ -57,14 +97,14 @@ class SACAgent(TD3Agent):
         q_value1 = self.model.critic1(obs, action)
         q_value2 = self.model.critic2(obs, action)
         q_value = torch.min(q_value1, q_value2)
-        self.writer.add_scalar('mean_log_prob', log_prob.detach().mean().cpu().numpy(), timestep)
-        self.writer.add_scalar('mean_q_value_policy', q_value.detach().mean().cpu().numpy(), timestep)
+        
+       
 
         #policy_loss = (-q_value + self.alpha * log_prob).mean()
         policy_loss = (-q_value + self.alpha * log_prob).mean()
         #self.writer.add_scalar('step_policy_loss', policy_loss.detach().cpu().numpy(), timestep)
 
-        return policy_loss
+        return policy_loss, log_prob.detach().mean().cpu().numpy(), q_value.detach().mean().cpu().numpy()
 
     def compute_value_loss(self, batch_data, timestep):
         obs, acts, rews, next_obs, dones = batch_data
@@ -86,13 +126,15 @@ class SACAgent(TD3Agent):
         loss2 = F.mse_loss(current_q_value2, target_update)
 
         loss = loss1 + loss2
-        self.writer.add_scalar('step_value_loss', loss.detach().cpu().numpy(), timestep)
+        
         
         return loss
     
     def update(self, update_times, timestep):
         value_log = []
         policy_log = []
+        log_prob_log = []
+        q_value_log = []
 
         for i in range(update_times):
             batch_data = self.prepare_minibatch(self.batch_size)
@@ -114,11 +156,13 @@ class SACAgent(TD3Agent):
                     param.requires_grad = False
 
                 self.actor_optimizer.zero_grad()
-                policy_loss = self.compute_policy_loss(batch_data, timestep) 
+                policy_loss, log_prob, q_value = self.compute_policy_loss(batch_data, timestep) 
                 policy_loss.backward()
                 self.actor_optimizer.step()
 
                 policy_log.append(policy_loss.detach().cpu().numpy())
+                log_prob_log.append(log_prob)
+                q_value_log.append(q_value)
 
 
                 for param in self.model.critic1.parameters():
@@ -133,7 +177,7 @@ class SACAgent(TD3Agent):
                         target_parma.data.mul_(self.polyak)
                         target_parma.data.add_((1-self.polyak) * param.data)
         
-        return np.mean(value_log), np.mean(policy_log)    
+        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log)    
 
 
         
