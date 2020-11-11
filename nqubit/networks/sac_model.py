@@ -5,6 +5,9 @@ import torch.nn.functional as F
 from torch.distributions.normal import Normal
 
 
+#LOG_STD_MIN = -20
+#LOG_STD_MAX = -4
+
 # Initialize Linear Layer weights & bias
 def weights_init_(m):
     if isinstance(m, nn.Linear):
@@ -18,9 +21,8 @@ class TanhGaussianActor(nn.Module):
         obs_dim = observation_space.shape[0]
         act_dim = action_space.shape[0]
         self.act_limit = action_space.high[0]
-
-        self.actor_log_std_min = actor_log_std_min
-        self.actor_log_std_max = actor_log_std_max
+        self.log_std_min = actor_log_std_min
+        self.log_std_max = actor_log_std_max
 
         
         self.actor_layer1 = nn.Linear(obs_dim, actor_hidden_size)
@@ -36,7 +38,7 @@ class TanhGaussianActor(nn.Module):
         actor_tmp = F.relu(self.actor_layer2(actor_tmp))
         mu = self.mu_layer(actor_tmp)
         log_std = self.log_std_layer(actor_tmp)
-        log_std = torch.clamp(log_std, self.actor_log_std_min, self.actor_log_std_max)
+        log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
         std = torch.exp(log_std)
 
         distribution = Normal(mu, std)
@@ -69,7 +71,7 @@ class MLPCritic(nn.Module):
         obs_dim = observation_space.shape[0]
         act_dim = action_space.shape[0]
 
-        self.q_value_layer1 = nn.Linear(obs_dim+act_dim, 256)
+        self.q_value_layer1 = nn.Linear(obs_dim+act_dim, critic_hidden_size)
 
         #print("layer:{0}".format(self.q_value_layer1.weight.requires_grad))
         
@@ -101,14 +103,14 @@ class GaussianActorMLPCritic(nn.Module):
     output = logits array
 
     '''
-    def __init__(self, observation_space, action_space,actor_hidden_size, critic_hidden_size, actor_log_std_min, actor_log_std_max):
+    def __init__(self, observation_space, action_space, actor_hidden_size, critic_hidden_size, actor_log_std_min, actor_log_std_max):
         super(GaussianActorMLPCritic, self).__init__()
         obs_dim = observation_space.shape[0]
         act_dim = action_space.shape[0]
         self.act_limit = action_space.high[0]
 
         self.actor = TanhGaussianActor(observation_space, action_space, actor_hidden_size, actor_log_std_min, actor_log_std_max)
-        self.critic1 = MLPCritic(observation_space, action_space, critic_hidden_size)
+        self.critic1 = MLPCritic(observation_space, action_space, critic_hidden_size) 
         self.critic2 = MLPCritic(observation_space, action_space, critic_hidden_size)
 
     

@@ -27,7 +27,7 @@ def get_args():
     parser.add_argument('--buffer_size', type = int, default = int(1e6))
 
     # Network Related
-    parser.add_argument('--actor_hidden_size', type = int, default = 64)  # 64 
+    parser.add_argument('--actor_hidden_size', type = int, default = 256)  # 64 
     parser.add_argument('--critic_hidden_size', type = int, default = 256)
     parser.add_argument('--actor_log_std_min', type = int, default = -20)
     parser.add_argument('--actor_log_std_max', type = int, default = -4)

@@ -10,7 +10,7 @@ from collections import deque
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_args  
 
-from energy_env.NqubitEnv import NqubitEnv2  # Env
+from energy_env.NqubitEnv import NqubitEnv5  # Env
 
 from agents.SACAgent import SACAgent # Agent
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     current_dir = os.path.dirname(os.path.abspath(__file__))
     train_log_dir = '/results/'
 
-    algo_name = 'sac_energy_new/' + 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size' + str(args.batch_size)
+    algo_name = 'sac_energy_new/' + 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size-' + str(args.batch_size)
 
     log_dir = current_dir + train_log_dir + algo_name
     
@@ -37,14 +37,14 @@ if __name__ == '__main__':
     
 
     # Device
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:1")
 
     # RNG
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
     # Env
-    env, test_env = NqubitEnv2(args.max_episode_steps), NqubitEnv2(args.max_episode_steps)
+    env, test_env = NqubitEnv5(args.max_episode_steps), NqubitEnv5(args.max_episode_steps)
     
 
     # Agent
@@ -87,15 +87,17 @@ if __name__ == '__main__':
             
             
             # log_state & action
-            if timestep % args.log_state_action_steps == 0:
+            #if timestep % args.log_state_action_steps == 0:
                 
-                writer.add_scalars('state_value', {'s0':obs[-6], 's1':obs[-5], 's2':obs[-4], 's3':obs[-3], 's4':obs[-2], 's5':obs[-1]}, timestep)
-                writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, timestep)
+            #    writer.add_scalars('state_value', {'s0':obs[-6], 's1':obs[-5], 's2':obs[-4], 's3':obs[-3], 's4':obs[-2], 's5':obs[-1]}, timestep)
+            #    writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, timestep)
 
             # test_agent
-            if info and (info['threshold'] >= -1.0):
-                print('find one threshold satisfied -1.0')
-                print("threshold:{0}, solution:{1}".format(threshold, info['solution']))
+            if info and (info['threshold'] >= -1.05):
+                print('find one threshold satisfied -1.05')
+                print("threshold:{0}, solution:{1}".format(info['threshold'], info['solution']))
+
+                '''
                 avg_reward = 0.
                 test_episodes = 5
                 for _ in range(test_episodes):
@@ -109,12 +111,17 @@ if __name__ == '__main__':
                     avg_reward += ep_rew
                 
                 avg_reward /= test_episodes
+                '''
             
                 torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
-                writer.add_scalar('test_episode_reward', avg_reward, timestep)
+                #writer.add_scalar('test_episode_reward', avg_reward, timestep)
+            
 
       
         writer.add_scalar('threshold', info['threshold'], episode)
+        if episode > (3 * int(args.start_to_exploit_steps/args.max_episode_steps)):
+            measure_state = info['solution']
+            writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
         writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
     env.close()
