@@ -16,6 +16,18 @@ import scipy.sparse.linalg
 
 from sklearn.preprocessing import OneHotEncoder
 
+# pass nbits &  Numbers to MakeMatrix
+nqubits_para = {
+    '5':[[49, 7, 7, 3],[57, 3, 19, 3],[69, 3, 23, 3],[87, 3, 29, 3]],
+    '6':[[123, 3, 41, 3],[129, 3, 43, 3],[183, 3, 61, 3]],
+    '7':[[55, 5, 11, 3],[65, 5, 13, 3],[77, 7, 11, 3],[91, 7, 13, 3]],
+    '9':[[115, 5, 23, 3],[119, 7, 17, 3],[133, 7, 19, 3],[155, 5, 31, 3],[161, 7, 23, 3],[203, 7, 29, 3],[217, 7, 31, 3]],
+    '10':[[121, 11, 11, 3],[169, 13, 13, 3],[291, 3, 97, 3],[339, 3, 113, 3],[381, 3, 127, 3]],
+    '11':[[215, 5, 43, 3],[235, 5, 47, 3],[393, 3, 131, 3],[411, 3, 137, 3],[417, 3, 139, 3],[489, 3, 163, 3],[519, 3, 173, 3],[573, 3, 191, 3],[579, 3, 193, 3],[633, 3, 211, 3]],
+    '13':[[209, 11, 19, 3],[247, 13, 19, 3],[253, 11, 23, 3]],
+    '14':[[259, 7, 37, 3],[287, 7, 41, 3],[301, 7, 43, 3],[329, 7, 47, 3],[371, 7, 53, 3],[413, 7, 59, 3],[427, 7, 61, 3]]
+}
+
 
 
 # version = '0.0.1'
@@ -106,7 +118,7 @@ class NqubitEnv5(gym.Env):
         self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(self.evolution_step + 6, ), dtype = np.float32)
 
         self.nbits = 5 # n 
-        self.T = 1.6344  # T 
+        self.T = 2.50  # T 
         self.g = 1e-2 # g
         self.Numbers = [[49, 7, 7, 3],[57, 3, 19, 3],[69, 3, 23, 3],[87, 3, 29, 3]]
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
@@ -166,12 +178,12 @@ class NqubitEnv5(gym.Env):
         return Hb, Hp_array
 
 
-# version = '0.0.9' 
-class NqubitEnv9(gym.Env):
+# version = '1.0.0' 
+class NqubitEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, max_episode_steps=3):
-        super(NqubitEnv9, self).__init__()
+    def __init__(self, max_episode_steps=3, nbit=9, T=9.18756103):
+        super(NqubitEnv, self).__init__()
         
         # one-hot encoding
         self.enc = OneHotEncoder()
@@ -182,11 +194,13 @@ class NqubitEnv9(gym.Env):
         self.action_space = spaces.Box(low = -0.01, high = 0.01, shape = (6, ), dtype = np.float32)
         self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(self.evolution_step + 6, ), dtype = np.float32)
 
-        self.nbits = 9 # n 
-        self.T = 9.18756103 # T 
-        self.g = 1e-2 # g
-        self.Numbers = [[115, 5, 23, 3],[119, 7, 17, 3],[133, 7, 19, 3],[155, 5, 31, 3],[161, 7, 23, 3],[203, 7, 29, 3],[217, 7, 31, 3]]
+        self.nbits = nbit # n 
+        self.Numbers = nqubits_para[str(self.nbits)] # Numbers
+        self.g = 1e-2   # g
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
+        
+
+        self.T = T # T 
 
         self.done = False
         self.counter = 0
@@ -204,14 +218,13 @@ class NqubitEnv9(gym.Env):
         time_encoding = self.enc.transform([[self.counter]]).toarray()
         self.state = np.hstack([time_encoding, np.reshape(action, (1, 6))])[0] # (1, 9) ---> (9, )
     
-
         if self.counter == (self.evolution_step - 1):
 
             self.done = True
 
             measure_state = np.sum(self.action_buffer, axis = 0)
 
-            reward , threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
+            reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
             return self.state, reward, self.done, {'threshold':threshold, 'solution':measure_state}
 

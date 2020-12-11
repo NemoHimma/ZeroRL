@@ -3,5 +3,5 @@
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pylintPath": "/home/pami/anaconda3/pkgs/pylint-2.5.3-py36h9f0ad1d_0/bin/pylint",
-    "python.dataScience.jupyterServerURI": "local"
+    "jupyter.jupyterServerType": "local"
 }

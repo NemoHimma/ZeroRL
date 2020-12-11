@@ -3,6 +3,11 @@ import argparse
 def get_args():
     
     parser = argparse.ArgumentParser(description = 'SAC parameters for nqubit')
+
+    # Env Specification
+    parser.add_argument('--nbit', type=int, default=5)
+    parser.add_argument('--T', type=float, default=2.50)
+    parser.add_argument('--GPU', type=int, default=0)
     
     # seed
     parser.add_argument('--seed', type = int, default = 1)
@@ -10,8 +15,8 @@ def get_args():
     # Control Variable
     parser.add_argument('--num_episodes', type = int, default = int(1e6))
     parser.add_argument('--max_episode_steps', type = int, default = 3) # 3
-    parser.add_argument('--start_to_exploit_steps', type = int, default = 900) # 900
-    parser.add_argument('--learn_start_steps', type = int, default = 900) # 900
+    parser.add_argument('--start_to_exploit_steps', type = int, default = 1200) # 900
+    parser.add_argument('--learn_start_steps', type = int, default = 1200) # 900
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 128)
@@ -27,7 +32,7 @@ def get_args():
     parser.add_argument('--buffer_size', type = int, default = int(1e6))
 
     # Network Related
-    parser.add_argument('--actor_hidden_size', type = int, default = 256)  # 64 
+    parser.add_argument('--actor_hidden_size', type = int, default = 64)  # 64 
     parser.add_argument('--critic_hidden_size', type = int, default = 256)
     parser.add_argument('--actor_log_std_min', type = int, default = -20)
     parser.add_argument('--actor_log_std_max', type = int, default = -4)

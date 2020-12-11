@@ -10,26 +10,30 @@ from collections import deque
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_args  
 
-from energy_env.NqubitEnv import NqubitEnv5  # Env
+from energy_env.NqubitEnv import NqubitEnv  # Env
 
 from agents.SACAgent import SACAgent # Agent
-
 
 
 if __name__ == '__main__':
     args = get_args()
     start = timer()
 
+    # threshold 
+    satisfied_flag = 0
+    convergence_buffer = []
 
     # log dir & summary writer
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    train_log_dir = '/results/'
+    current_dir = './results/'
+    train_log_dir = '/sac_energy_new/' + 'nbit-' + str(args.nbit)
 
-    algo_name = 'sac_energy_new/' + 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size-' + str(args.batch_size)
+    #exp_name = 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size-' + str(args.batch_size) + 'T2.50' 
 
-    log_dir = current_dir + train_log_dir + algo_name
+    exp_name = '/T-' + str(format(args.T, '.3f'))
+    log_dir = current_dir + train_log_dir + exp_name
     
     writer = SummaryWriter(log_dir)
+
     try:
         os.makedirs(log_dir)
     except OSError:
@@ -37,14 +41,14 @@ if __name__ == '__main__':
     
 
     # Device
-    device = torch.device("cuda:1")
+    device = torch.device("cuda:{}".format(args.GPU))
 
     # RNG
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
     # Env
-    env, test_env = NqubitEnv5(args.max_episode_steps), NqubitEnv5(args.max_episode_steps)
+    env, test_env = NqubitEnv(args.max_episode_steps, args.nbit, args.T), NqubitEnv(args.max_episode_steps)
     
 
     # Agent
@@ -93,11 +97,28 @@ if __name__ == '__main__':
             #    writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, timestep)
 
             # test_agent
+            
             if info and (info['threshold'] >= -1.05):
-                print('find one threshold satisfied -1.05')
-                print("threshold:{0}, solution:{1}".format(info['threshold'], info['solution']))
+                pass
+                '''
+                if satisfied_flag == 0:
+                    satisfied_flag = episode
+                elif ((episode - satisfied_flag)== 1):   
+                    convergence_buffer.append(info['threshold'])
+                    satisfied_flag == episode
+                else:
+                    satisfied_flag == episode
+                    
+                          
+                if len(convergence_buffer) == 100:
+                    mean = np.mean(np.array(convergence_buffer))
+                    if (mean >= -1.005):
+                        #torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
+                '''
+            
 
                 '''
+
                 avg_reward = 0.
                 test_episodes = 5
                 for _ in range(test_episodes):
@@ -111,9 +132,10 @@ if __name__ == '__main__':
                     avg_reward += ep_rew
                 
                 avg_reward /= test_episodes
+
                 '''
             
-                torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
+                #torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
                 #writer.add_scalar('test_episode_reward', avg_reward, timestep)
             
 
@@ -122,6 +144,7 @@ if __name__ == '__main__':
         if episode > (3 * int(args.start_to_exploit_steps/args.max_episode_steps)):
             measure_state = info['solution']
             writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
+
         writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
     env.close()
