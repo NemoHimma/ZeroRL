@@ -12,7 +12,7 @@ def weights_init_(m):
 class DQN(nn.Module):
     '''
 
-    input_shape: (6, )
+    input_shape: 6
     num_actions: index(0,13)
 
     '''
@@ -24,11 +24,11 @@ class DQN(nn.Module):
         
 
         if not self.noisy:
-            self.fc1 = nn.Linear(self.input_shape[0], 32)
+            self.fc1 = nn.Linear(self.input_size, 32)
             self.fc2 = nn.Linear(32, 32)
             self.fc3 = nn.Linear(32, self.num_actions)
         else:
-            self.fc1 = NoisyLinear(self.input_shape[0], 32, sigma_init)
+            self.fc1 = NoisyLinear(self.input_size, 32, sigma_init)
             self.fc2 = NoisyLinear(32, 32, sigma_init)
             self.fc3 = NoisyLinear(32, self.num_actions, sigma_init)
 

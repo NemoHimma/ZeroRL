@@ -1,6 +1,6 @@
 
 
-
+from energy_env.NqubitEnv import NqubitEnvDiscrete
 
 
 def DQN_Exploration():
