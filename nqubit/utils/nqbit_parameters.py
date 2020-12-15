@@ -6,7 +6,7 @@ def get_args():
 
     # Env Specification
     parser.add_argument('--nbit', type=int, default=5)
-    parser.add_argument('--T', type=float, default=2.50)
+    parser.add_argument('--T', type=float, default=1.63)
     parser.add_argument('--GPU', type=int, default=0)
     
     # seed

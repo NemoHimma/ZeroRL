@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 smooth = True
-smooth_index = 100 # [0, max)
+smooth_index = 150 # [0, max)
 threshold_len = 0 # == 10000??????????
 linewidth = 1.0
 
@@ -16,10 +16,12 @@ def plot_func(dir, color, label):
         event.Reload()
         threshold = event.scalars.Items('threshold')
         threshold_len = len(threshold)
+        print("current_dir: ", dir)
+        print("threshold_len: ", threshold_len)
         tmp_threshold = np.zeros(threshold_len)
         for i in range(len(threshold)): # average with the behind
             # threshold.value = threshold[i:i+smooth_index].value
-            # print(threshold[i])
+            # print("(threshold[i].step, threshold[i].value): ", (threshold[i].step, threshold[i].value))
             tmp_threshold[i] = (np.array([j.value for j in threshold[i:i+smooth_index]])).mean()
         # !!! threshold and tmp_threshold
         plt.plot([i.step for i in threshold], tmp_threshold, color=color, label=label, linewidth=linewidth) 
@@ -30,7 +32,7 @@ def plot_func(dir, color, label):
         plt.plot([i.step for i in threshold], [i.value for i in threshold], color=color, label=label, linewidth=linewidth)
         return
 
-dir = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-3.000/events.out.tfevents.1607676640.pami12"
+dir = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-5/T-1.450seed-5/events.out.tfevents.1608019729.pami12"
 event = EventAccumulator(dir)
 event.Reload()
 print("\n\n")
@@ -59,7 +61,7 @@ plot_func(dir=dir, color='maroon', label='T=3.0')
 # ax1.plot([i.step for i in acc],[i.value for i in acc],label='acc')
 
 
-dir2 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-3.500/events.out.tfevents.1607686863.pami12"
+dir2 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-5/T-1.450seed-6/events.out.tfevents.1608019741.pami12"
 plot_func(dir=dir2, color='steelblue', label='T=3.5')
 
 dir3 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-4.000/events.out.tfevents.1607686837.pami12"
@@ -87,11 +89,17 @@ plt.savefig('original.jpg')
 plt.xlim(0, 15000)
 plt.savefig('truncation_x.jpg')
 
+plt.xlim(0, 10000)
+plt.savefig('truncation_8000_.jpg')
+
+plt.xlim(0, 8000)
+plt.savefig('truncation_8000_.jpg')
+
 plt.xlim(0, 3000)
-plt.savefig('truncation_3000_-2.jpg')
+plt.savefig('truncation_3000_.jpg')
 
 plt.xlim(0, 1000)
-plt.savefig('truncation_1000_-2.jpg')
+plt.savefig('truncation_1000_.jpg')
 
 
 
