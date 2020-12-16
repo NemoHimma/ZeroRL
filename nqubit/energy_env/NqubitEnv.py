@@ -78,15 +78,15 @@ class NqubitEnvDiscrete(gym.Env):
         self.Pi = np.pi
 
 
-    def step(self, action):
+    def step(self, action, action_delta):
         current_obs = self.state
 
         if action % 2 == 1 :
-            self.state[int((action-1)/2)] += self.action_delta
+            self.state[int((action-1)/2)] += action_delta
         elif action == 0:
-            pass # NOOP
+            pass
         else:
-            self.state[int(action/2 - 1)] -= self.action_delta
+            self.state[int(action/2 - 1)] -= action_delta
 
         ## path is the constraint of the state
         path = self.delta + np.sum([self.state[i] * np.sin((i+1)* self.Pi * self.delta)for i in range(self.observation_space.shape[0])])
@@ -106,8 +106,8 @@ class NqubitEnvDiscrete(gym.Env):
 			
         #return self.state, reward, self.done, {}
 
-    def reset(self):
-        self.state = np.zeros(shape= (6, ), dtype=np.float32)
+    def reset(self, initial_state):
+        self.state = np.array(initial_state, shape= (6, ), dtype=np.float32)
         #self.done = False
         return self.state
 
