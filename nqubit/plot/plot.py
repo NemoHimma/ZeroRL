@@ -7,7 +7,7 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 smooth = True
 smooth_index = 150 # [0, max)
-threshold_len = 0 # == 10000??????????
+threshold_len = 0 # == 10000 ?????????? if (threshold_len>10000):threshold <- 10000
 linewidth = 1.0
 
 def plot_func(dir, color, label):
