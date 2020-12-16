@@ -46,6 +46,9 @@ def get_args():
     return args
     
 
+def get_dqn_args():
+    parser = argparse.ArgumentParser(description = 'SAC parameters for nqubit')
+
 
 if __name__ == "__main__":
     args = get_args()

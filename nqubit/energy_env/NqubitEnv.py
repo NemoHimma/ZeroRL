@@ -28,45 +28,65 @@ nqubits_para = {
     '14':[[259, 7, 37, 3],[287, 7, 41, 3],[301, 7, 43, 3],[329, 7, 47, 3],[371, 7, 53, 3],[413, 7, 59, 3],[427, 7, 61, 3]]
 }
 
+Easy_evolution_time = {
+    '5':1.6344,
+    '6':3.326,
+    '7':5.006,
+    '9':9.187,
+    '10':13.066,
+    '11':14.384,
+    '13':24.572,
+    '14':28.044
+}
 
+Hard_evolution_time = {
+    '5':2.5,
+    '6':3.459,
+    '7':6.347,
+    '9':12.680,
+    '10':16.257,
+    '11':16.378,
+    '13':32.020,
+    '14':57.518
+}
 
-# version = '0.0.1'
-class NqubitEnv1(gym.Env):
+# discrete_version = '0.0.1'
+class NqubitEnvDiscrete(gym.Env):
     metadata = {'render.modes': ['human']}
     
-    def __init__(self):
-        super(NqubitEnv, self).__init__()
+    def __init__(self, nbits=5, action_delta=1e-3):
+        super(NqubitEnvDiscrete, self).__init__()
 
         self.action_value = ['0','1+', '1-', '2+', '2-','3+','3-','4+','4-','5+','5-','6+','6-']
 
         self.action_space = spaces.Discrete(13)
-        self.observation_space = spaces.Box(low = -float('inf'), high = float('inf'), shape=(6, ),dtype = np.float32)
+        self.observation_space = spaces.Box(low = -1.0, high = 1.0, shape=(6, ), dtype = np.float32)
 
-        self.nbits = 5 # n 
-        self.action_delta = 0.01  # delta
-        self.T = 1.6344  # T 
+        self.nbits = nbits
+        self.T = Easy_evolution_time[str(nbits)]  # T 
         self.g = 1e-2 # g
-        self.Numbers = [[49, 7, 7, 3],[57, 3, 19, 3],[69, 3, 23, 3],[87, 3, 29, 3]]
+        self.Numbers = nqubits_para[str(nbits)]
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
 
         self.time_interval = np.linspace(0, self.T, 1000) # split into 1000 timesteps   t
         self.delta = self.time_interval/self.T  # t/T
-        self.done = False
 
+        self.action_delta = action_delta  # delta
+        #self.done = False
 
         self.state = None  # s
         self.Pi = np.pi
 
 
-    def step(self, action):
+    def step(self, action, action_delta):
         current_obs = self.state
 
         if action % 2 == 1 :
-            self.state[int((action-1)/2)] += self.action_delta
+            self.state[int((action-1)/2)] += action_delta
         elif action == 0:
-            pass # NOOP
+            pass
         else:
-            self.state[int(action/2 - 1)] -= self.action_delta
+            self.state[int(action/2 - 1)] -= action_delta
 
         ## path is the constraint of the state
         path = self.delta + np.sum([self.state[i] * np.sin((i+1)* self.Pi * self.delta)for i in range(self.observation_space.shape[0])])
@@ -75,18 +95,20 @@ class NqubitEnv1(gym.Env):
         strictly_increasing = all(x<=y for x,y in zip(path,path[1:]))
 
         if (strictly_increasing == 0):
-            reward = measure.CalcuFidelity(self.nbits, current_obs, self.Hb, self.Hp_array, self.T, self.g)
+            _, reward = measure.CalcuFidelity(self.nbits, current_obs, self.Hb, self.Hp_array, self.T, self.g)
+            return current_obs, reward, _, {}
         else:
-            reward = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
+            _, reward = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
+            return self.state, reward, _, {}
 
-        if (reward >= -1.0):
-            self.done = True
+        #if (reward >= -1.0):
+        #    self.done = True
 			
-        return self.state, reward, self.done, {}
+        #return self.state, reward, self.done, {}
 
-    def reset(self):
-        self.state = np.zeros(shape= (6, ), dtype=np.float32)
-        self.done = False
+    def reset(self, initial_state):
+        self.state = np.array(initial_state, shape= (6, ), dtype=np.float32)
+        #self.done = False
         return self.state
 
     def MakeMatrix(self, n , Numbers):
