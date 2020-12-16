@@ -1,6 +1,7 @@
 import numpy as np
 import glob
 import os
+import re
 
 appointed_folder = "nbit-5"
 
