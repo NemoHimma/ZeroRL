@@ -2,16 +2,17 @@ import numpy as np
 import glob
 import os
 import re
+import matplotlib.pyplot as plt
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-appointed_folder = "nbit-5"
+c = np.zeros(0)
+a = np.array([1, 2, 3])
+b = np.array([5, 6, 7])
 
-a = np.array([1, 2, 3, 4, 5, 6])
-b = np.zeros(10)
-print(b)
-print(a.mean())
-print(os.path)
+print(np.concatenate((a, b), axis = 0))
+print(np.stack((c, b), axis = 0))
+print(np.mean((a, b), axis = 0))
+print(np.std((a, b), axis = 0))
 
-original_path = "../results/sac_energy_new/" + appointed_folder + "/*"
-print(original_path)
-paths = glob.glob(original_path) # type:string
-print("paths: ", paths)
+thresholds = np.zeros(0)
+print(thresholds)

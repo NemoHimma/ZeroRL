@@ -54,7 +54,7 @@ Hard_evolution_time = {
 class NqubitEnvDiscrete(gym.Env):
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, nbits=5, action_delta=1e-3):
+    def __init__(self, nbits=5):
         super(NqubitEnvDiscrete, self).__init__()
 
         self.action_value = ['0','1+', '1-', '2+', '2-','3+','3-','4+','4-','5+','5-','6+','6-']
@@ -70,9 +70,6 @@ class NqubitEnvDiscrete(gym.Env):
 
         self.time_interval = np.linspace(0, self.T, 1000) # split into 1000 timesteps   t
         self.delta = self.time_interval/self.T  # t/T
-
-        self.action_delta = action_delta  # delta
-        #self.done = False
 
         self.state = None  # s
         self.Pi = np.pi

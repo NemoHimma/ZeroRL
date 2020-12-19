@@ -147,6 +147,7 @@ if __name__ == '__main__':
 
         writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
+    torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
     env.close()
     test_env.close()
     writer.close()

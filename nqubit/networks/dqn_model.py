@@ -16,7 +16,7 @@ class DQN(nn.Module):
     num_actions: index(0,13)
 
     '''
-    def __init__(self, input_shape, num_actions=13, noisy=False, sigma_init=0.5):
+    def __init__(self, input_shape, num_actions=13, noisy=False, sigma_init=0.5, hidden_size):
 
         self.input_shape = input_shape
         self.num_actions = num_actions
@@ -24,13 +24,13 @@ class DQN(nn.Module):
         
 
         if not self.noisy:
-            self.fc1 = nn.Linear(self.input_size, 32)
-            self.fc2 = nn.Linear(32, 32)
-            self.fc3 = nn.Linear(32, self.num_actions)
+            self.fc1 = nn.Linear(self.input_size, hidden_size)
+            self.fc2 = nn.Linear(hidden_size, hidden_size)
+            self.fc3 = nn.Linear(hidden_size, self.num_actions)
         else:
-            self.fc1 = NoisyLinear(self.input_size, 32, sigma_init)
-            self.fc2 = NoisyLinear(32, 32, sigma_init)
-            self.fc3 = NoisyLinear(32, self.num_actions, sigma_init)
+            self.fc1 = NoisyLinear(self.input_size, hidden_size, sigma_init)
+            self.fc2 = NoisyLinear(hidden_size, hidden_size, sigma_init)
+            self.fc3 = NoisyLinear(hidden_size, self.num_actions, sigma_init)
 
         self.apply(weights_init_)
 
