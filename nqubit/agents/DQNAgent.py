@@ -3,9 +3,10 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
+import random
 
-from ..networks.dqn_model import DQN
-from ..buffer.ReplayBuffer import ExperienceReplayBuffer
+from networks.dqn_model import DQN
+from buffer.ReplayBuffer import ExperienceReplayBuffer
 
 class DQNAgent(object):
     def __init__(self,args, env, log_dir, device):
@@ -13,6 +14,7 @@ class DQNAgent(object):
         # args
         self.device = device         # device
         self.update_count = 0
+        self.action_delta = args.action_delta
 
         self.lr = args.lr                       # 1e-3
         self.gamma = args.gamma                 # 0.9
@@ -24,11 +26,14 @@ class DQNAgent(object):
         self.epsilon_final = args.epsilon_final                 #  0.01
         self.epsilon_decay = args.epsilon_decay             #  1000
         self.epsilon_rate = args.epsilon_rate               # -0.2
-        self.epsilon_by_step = lambda: totalstep: self.epsilon_final + (self.epsilon_start - self.epsilon_final)*math.exp(self.epsilon_rate * totalstep / self.epsilon_decay)
+        self.epsilon_by_step = lambda totalstep :self.epsilon_final + (self.epsilon_start - self.epsilon_final)*math.exp(self.epsilon_rate * totalstep / self.epsilon_decay)
         
         # Entity Construction(buffer, model, optimizer) 
         # Initilization (model, optimizer)
         self.memory_size = args.memory_size     # 1e6
+        self.noisy = args.noisy                 # False
+        self.sigma_init = args.sigma_init       # 0.5
+        self.hidden_size = args.hidden_size     # 32
 
         self.env = env
         self.input_shape = env.observation_space.shape  # (6, )
@@ -52,7 +57,7 @@ class DQNAgent(object):
                 return action.item()
             
             else:
-                np.random.randint(0, self.num_actions)
+                return np.random.randint(0, self.num_actions)
             
     def prepare_minibatch(self):
         transitions = self.buffer.sample(self.batch_size)
@@ -86,6 +91,23 @@ class DQNAgent(object):
 
         return loss
 
+    def prob(self, obs, next_obs, action):
+        with torch.no_grad():
+            obs_tensor = torch.tensor(obs, device = self.device, dtype = torch.float).view(-1, 6)
+            next_obs_tensor = torch.tensor(next_obs, device = self.device, dtype = torch.float).view(-1, 6)
+            current_q_value = self.model(obs_tensor)
+            next_q_value = self.model(next_obs_tensor)
+
+            action_delta = random.uniform(0, self.action_delta)
+
+            if (action % 2==1):
+                delta_0 = self.action_delta
+            else:
+                delta_0 = -self.action_delta
+            
+            ep = np.array((next_q_value - current_q_value).detach().cpu()/delta_0 * action_delta)
+
+            return ep[0][action], action_delta
 
     def update(self):
         batch_data = self.prepare_minibatch()
@@ -109,8 +131,8 @@ class DQNAgent(object):
             self.update_count = 0        
 
     def declare_networks(self):
-        self.model = DQN(self.input_shape, self.num_actions, args.noisy, args.sigma_init, args.hidden_size)
-        self.target_model = DQN(self.input_shape, self.num_actions, args.noisy, args.sigma_init,args.hidden_size)
+        self.model = DQN(self.input_shape, self.num_actions, self.noisy, self.sigma_init, self.hidden_size)
+        self.target_model = DQN(self.input_shape, self.num_actions, self.noisy, self.sigma_init,self.hidden_size)
         
     def declare_memory(self):
         self.buffer = ExperienceReplayBuffer(self.memory_size)

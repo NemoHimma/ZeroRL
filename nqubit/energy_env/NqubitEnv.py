@@ -54,7 +54,7 @@ Hard_evolution_time = {
 class NqubitEnvDiscrete(gym.Env):
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, nbits=5):
+    def __init__(self, nbits, initial_state):
         super(NqubitEnvDiscrete, self).__init__()
 
         self.action_value = ['0','1+', '1-', '2+', '2-','3+','3-','4+','4-','5+','5-','6+','6-']
@@ -63,7 +63,8 @@ class NqubitEnvDiscrete(gym.Env):
         self.observation_space = spaces.Box(low = -1.0, high = 1.0, shape=(6, ), dtype = np.float32)
 
         self.nbits = nbits
-        self.T = Easy_evolution_time[str(nbits)]  # T 
+        #self.T = Easy_evolution_time[str(nbits)]  # T 
+        self.T = 9.200
         self.g = 1e-2 # g
         self.Numbers = nqubits_para[str(nbits)]
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
@@ -71,6 +72,7 @@ class NqubitEnvDiscrete(gym.Env):
         self.time_interval = np.linspace(0, self.T, 1000) # split into 1000 timesteps   t
         self.delta = self.time_interval/self.T  # t/T
 
+        self.initial_state = initial_state
         self.state = None  # s
         self.Pi = np.pi
 
@@ -83,7 +85,7 @@ class NqubitEnvDiscrete(gym.Env):
         elif action == 0:
             pass
         else:
-            self.state[int(action/2 - 1)] -= action_delta
+            self.state[int(action/2-1)] -= action_delta
 
         ## path is the constraint of the state
         path = self.delta + np.sum([self.state[i] * np.sin((i+1)* self.Pi * self.delta)for i in range(self.observation_space.shape[0])])
@@ -103,8 +105,8 @@ class NqubitEnvDiscrete(gym.Env):
 			
         #return self.state, reward, self.done, {}
 
-    def reset(self, initial_state):
-        self.state = np.array(initial_state, shape= (6, ), dtype=np.float32)
+    def reset(self):
+        self.state = np.array(self.initial_state, dtype=np.float32)
         #self.done = False
         return self.state
 
