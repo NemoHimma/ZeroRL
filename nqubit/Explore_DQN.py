@@ -45,7 +45,7 @@ def DQN_Exploration(args, log_dir, device, initial_state):
 
     for episode in tqdm(range(args.num_episodes)):
         Temp = Temp * 10.0 ** (-0.1)
-        obs = env.reset()
+        #obs = env.reset()
         
         for step in tqdm(range (args.episode_length)):
             
@@ -54,7 +54,7 @@ def DQN_Exploration(args, log_dir, device, initial_state):
             # aciton <class 'int'>
             
             # execute large stepsize number if it satisfies the strong constraint
-            next_obs, reward, done, info = env.step(action, args.action_delta)
+            next_obs, reward, done, info = env.step(obs, action, args.action_delta)
             
             # judge the large action stepsize effect
             # if ep = 0 : large stepsize is useless
@@ -65,8 +65,8 @@ def DQN_Exploration(args, log_dir, device, initial_state):
             u = random.random()
             
             if u <= accept_probability: # take a small stepsize 
-        
-                next_obs, reward, done, info = env.step(action, action_delta)
+                #agent.buffer.push((obs, action, reward, next_obs))
+                next_obs, reward, done, info = env.step(obs, action, action_delta)
             else: # No operation, the transition will be (obs, 0, reward, obs)
                 action = 0 
                 
@@ -78,7 +78,7 @@ def DQN_Exploration(args, log_dir, device, initial_state):
 
             if totalstep > args.learn_start_steps:
                 loss = agent.update()
-                writer.add_scalar('loss', loss, total_step)
+                writer.add_scalar('loss', loss, totalstep)
                 epsilon = agent.epsilon_by_step(totalstep)
 
             obs = next_obs
@@ -95,7 +95,7 @@ def DQN_Exploration(args, log_dir, device, initial_state):
                     test_action = agent.get_action(test_obs, test_epsilon)
 
                     # execute large stepsize number
-                    test_next_obs, reward, done, info = env.step(test_action, args.action_delta)
+                    test_next_obs, reward, done, info = env.step(test_obs, test_action, args.action_delta)
                     
                     # judge the large action stepsize effect
                     ep, action_delta = agent.prob(test_obs, test_next_obs, test_action)
@@ -105,7 +105,7 @@ def DQN_Exploration(args, log_dir, device, initial_state):
 
                     if u <= accept_probability: # take a small stepsize 
                     
-                        test_next_obs, reward, done, info = env.step(test_action, action_delta)
+                        test_next_obs, reward, done, info = env.step(test_obs, test_action, action_delta)
                     else:
                         action = 0 
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
     current_dir = './results/'
     train_log_dir = 'dqn_exploration/'
-    exp_name = 'nbit-9T-9.200'
+    exp_name = 'nbit-9T-9.200new_params'
     dqn_log_dir = current_dir + train_log_dir + exp_name
 
     try:
@@ -175,5 +175,5 @@ if __name__ == '__main__':
 
 
     #  Parallel_run DQN_Exploration
-    # record the exploration
+    # # record the exploration
     

@@ -5,7 +5,6 @@ import re
 import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-
 appointed_folder = "nbit-5"
 
 original_path = "../results/sac_energy_new/" + appointed_folder + "/*"

@@ -77,28 +77,28 @@ class NqubitEnvDiscrete(gym.Env):
         self.Pi = np.pi
 
 
-    def step(self, action, action_delta):
-        current_obs = self.state
+    def step(self, obs, action, action_delta):
+        next_obs = copy.deepcopy(obs)
 
         if action % 2 == 1 :
-            self.state[int((action-1)/2)] += action_delta
+            next_obs[int((action-1)/2)] += action_delta
         elif action == 0:
             pass
         else:
-            self.state[int(action/2-1)] -= action_delta
+            next_obs[int(action/2-1)] -= action_delta
 
         ## path is the constraint of the state
-        path = self.delta + np.sum([self.state[i] * np.sin((i+1)* self.Pi * self.delta)for i in range(self.observation_space.shape[0])])
+        path = self.delta + np.sum([next_obs[i] * np.sin((i+1)* self.Pi * self.delta)for i in range(self.observation_space.shape[0])])
 
 
         strictly_increasing = all(x<=y for x,y in zip(path,path[1:]))
 
         if (strictly_increasing == 0):
-            _, reward = measure.CalcuFidelity(self.nbits, current_obs, self.Hb, self.Hp_array, self.T, self.g)
-            return current_obs, reward, _, {}
+            _, reward = measure.CalcuFidelity(self.nbits, obs, self.Hb, self.Hp_array, self.T, self.g)
+            return obs, reward, _, {}
         else:
-            _, reward = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
-            return self.state, reward, _, {}
+            _, reward = measure.CalcuFidelity(self.nbits, next_obs, self.Hb, self.Hp_array, self.T, self.g)
+            return next_obs, reward, _, {}
 
         #if (reward >= -1.0):
         #    self.done = True
@@ -106,9 +106,9 @@ class NqubitEnvDiscrete(gym.Env):
         #return self.state, reward, self.done, {}
 
     def reset(self):
-        self.state = np.array(self.initial_state, dtype=np.float32)
+        #self.state = np.array(self.initial_state, dtype=np.float32)
         #self.done = False
-        return self.state
+        return self.initial_state
 
     def MakeMatrix(self, n , Numbers):
         lenthNumbers = len(Numbers)

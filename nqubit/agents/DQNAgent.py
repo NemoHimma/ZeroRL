@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
 import random
+import math
 
 from networks.dqn_model import DQN
 from buffer.ReplayBuffer import ExperienceReplayBuffer
@@ -87,7 +88,8 @@ class DQNAgent(object):
 
         target_value = rew_batch + self.gamma * next_max_q_value
 
-        loss = F.smooth_l1_loss(current_q_value, target_value)
+        #loss = F.smooth_l1_loss(current_q_value, target_value)
+        loss = F.mse_loss(current_q_value, target_value)
 
         return loss
 

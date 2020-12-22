@@ -1,4 +1,4 @@
-# nbit-6, with truncation, one figure, all T.
+# nbit-5, with truncation, one figure, all T.
 # with smooth
 
 import numpy as np
@@ -8,167 +8,90 @@ import re
 import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
+appointed_folder = "nbit-5"
 smooth = True
-smooth_index = 150 # [0, max)
-threshold_len = 0 # == 10000 ?????????? if (threshold_len>10000): threshold <- 10000
-linewidth = 1.0
+smooth_index = 150 # [1, +max), could be changed into 1
+threshold_len = 0 # == 10000? if (threshold_len>10000): threshold <- 10000
+linewidth = 1.0 # linewidth of the figure line
+color_dictionary = {
+    0: "#0000FF", 1: "#1F618D", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
+    5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",
+    10: "#D35400", 11: "#800000", 12: "#E74C3C", 13: "#F1948A", 14: "#1C2833",
+    15: "#F322CD", 16: "#0E0F0F"
+}
 
-def plot_func_2(dirs, color, label):
-    if (smooth):
-        
-        threshold_list = list()
-        for dir in dirs:
-            event = EventAccumulator(dir)
-            event.Reload()
-            threshold = event.scalars.Items('threshold')
-            threshold_len = len(threshold)
-            print("current_dir: ", dir)
-            print("threshold_len: ", threshold_len)
-            tmp_threshold = np.zeros(threshold_len)
-            for i in range(len(threshold)): # average with the behind
-                # threshold.value = threshold[i:i+smooth_index].value
-                # print("(threshold[i].step, threshold[i].value): ", (threshold[i].step, threshold[i].value))
-                tmp_threshold[i] = (np.array([j.value for j in threshold[i:i+smooth_index]])).mean()
-            # !!! threshold and tmp_threshold
-            # thresholds = np.stack((thresholds, tmp_threshold), axis = 0)
-            threshold_list.append(tmp_threshold)
+def mean_std_fillcolor_plot(thresholds, color, label):
+    thresholds_mean = thresholds.mean(axis = 0)
+    x = [i for i in range(len(thresholds_mean))]
+    thresholds_std = thresholds.std(axis = 0)
+    superbound = thresholds_mean + thresholds_std
+    lowerbound = thresholds_mean - thresholds_std
 
-            print("len(tmp_threshold): ", len(tmp_threshold))
-            print("threshold[-1]: ", threshold[-1])
+    plt.plot(x, thresholds_mean, color=color, label=label, linewidth=linewidth) 
+    plt.fill_between(x, superbound, lowerbound, where=superbound>=lowerbound, facecolor=color, interpolate=True, alpha=0.1)
+    return
 
-        # minimum threshold length of all thresholds from one T and different seeds: 
-        min_threshold_len = min([len(threshold_list[i]) for i in range(len(threshold_list))])
-        print("min_threshold_len: ", min_threshold_len)
+def smooth_func(threshold, tmp_threshold):
+    for i in range(len(threshold)): # average with the behind
+        # threshold.value = threshold[i:i+smooth_index].value
+        # print("(threshold[i].step, threshold[i].value): ", (threshold[i].step, threshold[i].value))
+        tmp_threshold[i] = (np.array([j.value for j in threshold[i:i+smooth_index]])).mean()
+    return tmp_threshold
 
-        thresholds = threshold_list[0][0:min_threshold_len]
-        for i in range(1, len(threshold_list)):
-            print("len(thresholds): ", len(thresholds))
-            print("len(threshold_list[i][0:min_threshold_len]): ", len(threshold_list[i][0:min_threshold_len]))
-            thresholds = np.stack((thresholds, threshold_list[i][0:min_threshold_len]), axis = 0)
-        
-
-        print("len(thresholds): ", len(thresholds))
-        # print("len(thresholds[0]): ", len(thresholds[0]))
-        # plt.plot([i.step for i in threshold], tmp_threshold, color=color, label=label, linewidth=linewidth) 
-    else:
-        event = EventAccumulator(dir)
-        event.Reload()
-        threshold = event.scalars.Items('threshold')
-        plt.plot([i.step for i in threshold], [i.value for i in threshold], color=color, label=label, linewidth=linewidth)
-        return
-
-def plot_func(dir, color, label):
-    if (smooth):
+def plot_func(dirs, color, label):
+    threshold_list = list()
+    for dir in dirs:
         event = EventAccumulator(dir)
         event.Reload()
         threshold = event.scalars.Items('threshold')
         threshold_len = len(threshold)
-        print("current_dir: ", dir)
-        print("threshold_len: ", threshold_len)
         tmp_threshold = np.zeros(threshold_len)
-        for i in range(len(threshold)): # average with the behind
-            # threshold.value = threshold[i:i+smooth_index].value
-            # print("(threshold[i].step, threshold[i].value): ", (threshold[i].step, threshold[i].value))
-            tmp_threshold[i] = (np.array([j.value for j in threshold[i:i+smooth_index]])).mean()
-        # !!! threshold and tmp_threshold
-        print("tmp_threshold: ", tmp_threshold)
-        plt.plot([i.step for i in threshold], tmp_threshold, color=color, label=label, linewidth=linewidth) 
-    else:
-        event = EventAccumulator(dir)
-        event.Reload()
-        threshold = event.scalars.Items('threshold')
-        plt.plot([i.step for i in threshold], [i.value for i in threshold], color=color, label=label, linewidth=linewidth)
-        return
+        if (not smooth):
+            smooth_index = 1
+        tmp_threshold = smooth_func(threshold, tmp_threshold)
+        threshold_list.append(tmp_threshold)
+
+    # minimum threshold length of all thresholds from one T and different seeds: 
+    min_threshold_len = min([len(threshold_list[i]) for i in range(len(threshold_list))])
+    thresholds = np.zeros(0)
+    for i in range(0, len(threshold_list)):
+        thresholds = np.concatenate((thresholds, threshold_list[i][0:min_threshold_len]), axis = 0)
+    thresholds = thresholds.reshape((len(threshold_list), min_threshold_len))
+    mean_std_fillcolor_plot(thresholds, color, label)
+    # plt.plot([i.step for i in threshold], tmp_threshold, color=color, label=label, linewidth=linewidth) 
 
 #-------------------------------------------------------------------------------------
 # dir func:
-appointed_folder = "nbit-5"
-
 original_path = "../results/sac_energy_new/" + appointed_folder + "/*"
-print(original_path)
-paths = glob.glob(original_path) # type:string
-print("paths: ", paths)
+paths = glob.glob(original_path) # paths type:string list
 
-prog = re.compile('T-[^s]*')
-print("prog.search(paths[0]): ", prog.search(paths[0]))
+tar_re = re.compile('T-[^s]*')
 T_value_set = set()
 
 for i in range(len(paths)):
-    T_value_set.add(prog.search(paths[i]).group())
-print("T_value_set: ", T_value_set)
+    T_value_set.add(tar_re.search(paths[i]).group())
 final_path = list()
 T_value_list = list(T_value_set)
 
 for i in range(len(T_value_list)):
     final_path.append(list())
-    prog = re.compile(T_value_list[i])
+    tar_re = re.compile(T_value_list[i])
     for j in range(len(paths)):
-        if (prog.search(paths[j]) != None):
+        if (tar_re.search(paths[j]) != None):
             final_path[i].append(paths[j])
 
-print("final_path: ", final_path)
-
-event = EventAccumulator(final_path[0][0])
-event.Reload()
-threshold = event.scalars.Items('threshold')
-
-plot_func_2(final_path[0], 'r', "testtest")
-
+for i in range(len(final_path)):
+    plot_func(final_path[i], color_dictionary[i], T_value_list[i])
 #-------------------------------------------------------------------------------------
-
-dir = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-5/T-1.450seed-5/events.out.tfevents.1608019729.pami12"
-event = EventAccumulator(dir)
-event.Reload()
-print("\n\n")
-print("event: ", event)
-print("event.scalars.Keys(): ", event.scalars.Keys())
-
-# fig = plt.figure(figsize=(6,4))
-# ax1 = fig.add_subplot(211)
-# ax1.plot([i.step for i in threshold], [i.value for i in threshold], color='r', label='T=3.0')
-# ax1.set_xlim(0)
-# # acc=ea.scalars.Items('acc')
-# # ax1.plot([i.step for i in acc],[i.value for i in acc],label='acc')
-# ax1.set_xlabel("step")
-# ax1.set_ylabel("threshold")
-
-# dir2 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-3.500/events.out.tfevents.1607686863.pami12"
-# event2 = EventAccumulator(dir2)
-# event2.Reload()
-# threshold2 = event2.scalars.Items('threshold')
-# ax2 = fig.add_subplot(212)
-# ax2.plot([i.step for i in threshold], [i.value for i in threshold], color='b', label='T=3.5')
-
-plot_func(dir=dir, color='maroon', label='T=3.0')
-
-# acc=ea.scalars.Items('acc')
-# ax1.plot([i.step for i in acc],[i.value for i in acc],label='acc')
-
-
-# dir2 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-5/T-1.450seed-6/events.out.tfevents.1608019741.pami12"
-# plot_func(dir=dir2, color='steelblue', label='T=3.5')
-
-# dir3 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-4.000/events.out.tfevents.1607686837.pami12"
-# plot_func(dir=dir3, color='g', label='T=4.0')
-
-# dir4 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-4.500/events.out.tfevents.1607686906.pami12"
-# plot_func(dir=dir4, color='gold', label='T=4.5')
-
-# dir5 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-5.000/events.out.tfevents.1607676571.pami12"
-# plot_func(dir=dir5, color='grey', label='T=5.0')
-
-# dir6 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-7.000/events.out.tfevents.1607676668.pami12"
-# plot_func(dir=dir6, color='sandybrown', label='T=7.0')
-
-# dir7 = "/home/pami/ZeroRL/nqubit/results/sac_energy_new/nbit-6/T-9.000/events.out.tfevents.1607676748.pami12"
-# plot_func(dir=dir7, color='pink', label='T=9.0')
 
 plt.xlim(0)
 plt.xlabel("step")
 plt.ylabel("threshold")
 
-plt.legend(loc='lower right')
-plt.savefig('original.jpg')
+# plt.legend(loc='lower right')
+plt.legend(bbox_to_anchor=(0.5, -0.3), loc="lower center")
+plt.title(appointed_folder)
+plt.savefig('original.jpg', dpi=600, bbox_inches='tight')
 
 plt.xlim(0, 15000)
 plt.savefig('truncation_x.jpg')
