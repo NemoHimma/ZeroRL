@@ -86,7 +86,7 @@ class NqubitEnvDiscrete(gym.Env):
             pass
         else:
             next_obs[int(action/2-1)] -= action_delta
-
+        '''
         ## path is the constraint of the state
         path = self.delta + np.sum([next_obs[i] * np.sin((i+1)* self.Pi * self.delta)for i in range(self.observation_space.shape[0])])
 
@@ -99,6 +99,11 @@ class NqubitEnvDiscrete(gym.Env):
         else:
             _, reward = measure.CalcuFidelity(self.nbits, next_obs, self.Hb, self.Hp_array, self.T, self.g)
             return next_obs, reward, _, {}
+        '''
+        
+        _, reward = measure.CalcuFidelity(self.nbits, next_obs, self.Hb, self.Hp_array, self.T, self.g)
+
+        return next_obs, reward, _, {}
 
         #if (reward >= -1.0):
         #    self.done = True
@@ -121,6 +126,10 @@ class NqubitEnvDiscrete(gym.Env):
             Hp_array[i][:]=fact.Hamiltonian_matrix()
         
         return Hb, Hp_array
+
+    def get_current_threshold(self, obs):
+        _, reward = measure.CalcuFidelity(self.nbits, obs, self.Hb, self.Hp_array, self.T, self.g)
+        return reward
 
 # version = '0.0.5'
 class NqubitEnv5(gym.Env):
@@ -257,7 +266,8 @@ class NqubitEnv(gym.Env):
         self.counter = 0
         time_encoding = self.enc.transform([[self.counter]]).toarray()  # (1,3)
         
-        initial_action = np.zeros((6,) , dtype = np.float)
+        #initial_action = np.zeros((6,) , dtype = np.float)
+        initial_action = np.array([-0.01515305, -0.0022998, -0.00602785, 0.00275275, 0.01112909, -0.00420499], dtype=np.float)
         self.state = np.hstack([time_encoding, np.reshape(initial_action, (1, 6))])[0]  # (1, 9) ---> (9, )
         self.done = False
         self.action_buffer = []

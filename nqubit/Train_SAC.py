@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     #exp_name = 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size-' + str(args.batch_size) + 'T2.50' 
 
-    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed)
+    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'initial_state_2'
     log_dir = current_dir + train_log_dir + exp_name
     
     writer = SummaryWriter(log_dir)
@@ -53,6 +53,8 @@ if __name__ == '__main__':
 
     # Agent
     agent = SACAgent(args, env, log_dir, device)
+
+    
 
 
     # Training Loop

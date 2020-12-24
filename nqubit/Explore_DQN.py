@@ -3,6 +3,7 @@ import random
 import os
 import numpy as np
 from tqdm import tqdm
+import json
 
 from energy_env.NqubitEnv import NqubitEnvDiscrete, NqubitEnv
 from utils.nqbit_parameters import get_args, get_dqn_args
@@ -42,10 +43,13 @@ def DQN_Exploration(args, log_dir, device, initial_state):
     Temp = args.Temp
     totalstep = 0
     epsilon = 1.0
+    obs = env.reset()
+    print('initial_reward{0}'.format(env.get_current_threshold(obs)))
+    
 
     for episode in tqdm(range(args.num_episodes)):
         Temp = Temp * 10.0 ** (-0.1)
-        #obs = env.reset()
+        obs = env.reset()
         
         for step in tqdm(range (args.episode_length)):
             
@@ -55,6 +59,7 @@ def DQN_Exploration(args, log_dir, device, initial_state):
             
             # execute large stepsize number if it satisfies the strong constraint
             next_obs, reward, done, info = env.step(obs, action, args.action_delta)
+            #agent.buffer.push((obs, action, reward, next_obs))
             
             # judge the large action stepsize effect
             # if ep = 0 : large stepsize is useless
@@ -66,9 +71,11 @@ def DQN_Exploration(args, log_dir, device, initial_state):
             
             if u <= accept_probability: # take a small stepsize 
                 #agent.buffer.push((obs, action, reward, next_obs))
+
                 next_obs, reward, done, info = env.step(obs, action, action_delta)
             else: # No operation, the transition will be (obs, 0, reward, obs)
                 action = 0 
+                next_obs, reward, done, info = env.step(obs, action, action_delta)
                 
 
             # record
@@ -76,20 +83,26 @@ def DQN_Exploration(args, log_dir, device, initial_state):
 
             agent.buffer.push((obs, action, reward, next_obs))
 
-            if totalstep > args.learn_start_steps:
+            if (totalstep > args.learn_start_steps) and (totalstep % args.update_freq==0):
                 loss = agent.update()
                 writer.add_scalar('loss', loss, totalstep)
                 epsilon = agent.epsilon_by_step(totalstep)
+                if epsilon < args.epsilon_min:
+                    epsilon = args.epsilon_min
 
             obs = next_obs
             totalstep += 1
+            if (reward >= -1.0):
+                return reward, obs
 
             # Test_DQN_Agent
-            if (reward >= -1.0):
+            if (totalstep % args.test_freq == 0):
                 test_epsilon = 0.0
-                test_obs = obs
+                test_obs = env.reset()
                 #T = env.get_easy_T(args.nbits)
-                T = 9.200
+                reward_recorder = -2.0
+                obs_recorder = test_obs
+                
 
                 for step in range(args.test_step):
                     test_action = agent.get_action(test_obs, test_epsilon)
@@ -100,19 +113,32 @@ def DQN_Exploration(args, log_dir, device, initial_state):
                     # judge the large action stepsize effect
                     ep, action_delta = agent.prob(test_obs, test_next_obs, test_action)
 
-                    accept_probability = 1 if (ep > 0) else np.exp(ep/T)
+                    accept_probability = 1 if (ep > 0) else np.exp(ep/Temp)
                     u = random.random()
 
                     if u <= accept_probability: # take a small stepsize 
                     
                         test_next_obs, reward, done, info = env.step(test_obs, test_action, action_delta)
                     else:
-                        action = 0 
-
+                        action = 0
+                        test_next_obs = test_obs
+                        reward = env.get_current_threshold(test_obs)
+                        
+    
+                    if reward > reward_recorder:
+                        reward_recorder = reward
+                        obs_recorder = test_next_obs
+                    if (reward >= -1.0):
+                        return reward, test_obs
+                    
+                    agent.buffer.push((test_obs, action, reward, test_next_obs))
                     test_obs = test_next_obs
+                
+                writer.add_scalar('test_max_reward', reward_recorder, totalstep)
+                writer.add_scalars('solution', {'s0':obs_recorder[0],'s1':obs_recorder[1],'s2':obs_recorder[2],'s3':obs_recorder[3],'s4':obs_recorder[4],'s5':obs_recorder[5]}, totalstep)
 
-                if (reward >= -1.0):
-                    return reward, test_obs
+
+                
     
  
 
@@ -146,13 +172,13 @@ if __name__ == '__main__':
 
     # dqn_exploration part
     dqn_args = get_dqn_args()
-    dqn_device = torch.device("cuda:0")
+    dqn_device = torch.device("cuda:1")
     
     # dqn log_dir
 
     current_dir = './results/'
     train_log_dir = 'dqn_exploration/'
-    exp_name = 'nbit-9T-9.200new_params'
+    exp_name = 'nbit-9T-9.200-original-setting/'
     dqn_log_dir = current_dir + train_log_dir + exp_name
 
     try:
@@ -164,9 +190,13 @@ if __name__ == '__main__':
     
     # specific configuration
     dqn_args.nbit = 9
+    dqn_dict = vars(dqn_args)
     # Env T has been set to 9.200
+    with open(dqn_log_dir + 'paras.json', 'w') as f:
+        f.write(json.dumps(dqn_dict, ensure_ascii=False, indent=4, separators=(',', ':')))
+
     reward, test_obs = DQN_Exploration(dqn_args, dqn_log_dir, dqn_device, initial_state)
-    print(test_obs)
+    print(test_obs, reward)
     
     #for i in range(len(initial_state)): #8
     #    dqn_device = torch.device("cuda:{}").format(i % 2)
