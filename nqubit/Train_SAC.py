@@ -17,21 +17,15 @@ from agents.SACAgent import SACAgent # Agent
 
 if __name__ == '__main__':
     args = get_args()
-    start = timer()
-
-    # threshold 
-    satisfied_flag = 0
-    convergence_buffer = []
+    sac_dict = vars(args)
+    with open(os.path.join(log_dir, 'params.json'), 'w') as f:
+        f.write(json.dumps)
 
     # log dir & summary writer
     current_dir = './results/'
     train_log_dir = '/sac_energy_new/' + 'nbit-' + str(args.nbit)
-
-    #exp_name = 'steps-' + str(args.max_episode_steps) + 'actor_hidden_size-' + str(args. actor_hidden_size) + 'gamma-' + str(args.gamma) + 'batch_size-' + str(args.batch_size) + 'T2.50' 
-
     exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'initial_state_2'
-    log_dir = current_dir + train_log_dir + exp_name
-    
+    log_dir = current_dir + train_log_dir + exp_name 
     writer = SummaryWriter(log_dir)
 
     try:
@@ -42,20 +36,16 @@ if __name__ == '__main__':
 
     # Device
     device = torch.device("cuda:{}".format(args.GPU))
+    # Env
+    env = NqubitEnv(args.max_episode_steps, args.nbit, args.T)
 
     # RNG
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-
-    # Env
-    env, test_env = NqubitEnv(args.max_episode_steps, args.nbit, args.T), NqubitEnv(args.max_episode_steps)
-    
+    env.action_space.seed(args.seed)
 
     # Agent
     agent = SACAgent(args, env, log_dir, device)
-
-    
-
 
     # Training Loop
     for episode in tqdm(range(args.num_episodes)): # int(1e6)
