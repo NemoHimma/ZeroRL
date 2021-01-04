@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     # log dir & summary writer
     current_dir = './results/'
-    train_log_dir = '/sac_energy_new/' + 'nbit-' + str(args.nbit)
+    train_log_dir = '/new_setting/' + 'nbit-' + str(args.nbit)
     exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'scale-' + str(args.reward_scale)
     log_dir = current_dir + train_log_dir + exp_name 
 

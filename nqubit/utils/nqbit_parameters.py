@@ -14,19 +14,19 @@ def get_args():
 
     # Control Variable
     parser.add_argument('--num_episodes', type = int, default = int(3e4))
-    parser.add_argument('--episode_length', type = int, default = 3) # 3
+    parser.add_argument('--episode_length', type = int, default = 5) # 3
     parser.add_argument('--random_steps', type = int, default = 256) # 900
     parser.add_argument('--learn_start_steps', type = int, default = 256) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 30)
-    parser.add_argument('--target_update_freq', type=int, default = 100)
+    parser.add_argument('--target_update_freq', type=int, default = 200)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 128)
-    parser.add_argument('--policy_lr', type = float, default = 3e-4)
+    parser.add_argument('--policy_lr', type = float, default = 1e-4)
     parser.add_argument('--value_lr', type = float, default = 3e-4)
     parser.add_argument('--alpha_lr', type=float, default = 5e-5)
     parser.add_argument('--gamma', type = float, default = 0.99)
-    parser.add_argument('--alpha', type = float, default = 0.02)
+    parser.add_argument('--alpha', type = float, default = 0.02) # auto-tune
     parser.add_argument('--polyak', type = float, default = 0.995)
     parser.add_argument('--update_freq_per_step', type = int, default = 2)
     parser.add_argument('--policy_decay', type = int, default = 2)
