@@ -13,10 +13,10 @@ def get_args():
     parser.add_argument('--seed', type = int, default = 1)
 
     # Control Variable
-    parser.add_argument('--num_episodes', type = int, default = int(1e4))
+    parser.add_argument('--num_episodes', type = int, default = int(3e4))
     parser.add_argument('--episode_length', type = int, default = 3) # 3
-    parser.add_argument('--random_steps', type = int, default = 128) # 900
-    parser.add_argument('--learn_start_steps', type = int, default = 128) # 900
+    parser.add_argument('--random_steps', type = int, default = 256) # 900
+    parser.add_argument('--learn_start_steps', type = int, default = 256) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 30)
     parser.add_argument('--target_update_freq', type=int, default = 100)
 
@@ -24,7 +24,7 @@ def get_args():
     parser.add_argument('--batch_size', type = int, default = 128)
     parser.add_argument('--policy_lr', type = float, default = 3e-4)
     parser.add_argument('--value_lr', type = float, default = 3e-4)
-    parser.add_argument('--alpha_lr', type=float, default = 3e-4)
+    parser.add_argument('--alpha_lr', type=float, default = 5e-5)
     parser.add_argument('--gamma', type = float, default = 0.99)
     parser.add_argument('--alpha', type = float, default = 0.02)
     parser.add_argument('--polyak', type = float, default = 0.995)
@@ -32,7 +32,7 @@ def get_args():
     parser.add_argument('--policy_decay', type = int, default = 2)
 
     # buffer_size
-    parser.add_argument('--buffer_size', type = int, default = int(1e6))
+    parser.add_argument('--buffer_size', type = int, default = int(1e5))
 
     # Network Related
     parser.add_argument('--actor_hidden_size', type = int, default = 256)  # 64 

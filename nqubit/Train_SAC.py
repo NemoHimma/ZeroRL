@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # log dir & summary writer
     current_dir = './results/'
     train_log_dir = '/sac_energy_new/' + 'nbit-' + str(args.nbit)
-    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'autotune-3'
+    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'auto_no_dones'
     log_dir = current_dir + train_log_dir + exp_name 
 
     try:
@@ -145,9 +145,9 @@ if __name__ == '__main__':
 
       
         writer.add_scalar('threshold', info['threshold'], episode)
-        if episode > 10000:
-            measure_state = info['solution']
-            writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
+        #if episode > 10000:
+        #    measure_state = info['solution']
+        #    writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
 
         #writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
