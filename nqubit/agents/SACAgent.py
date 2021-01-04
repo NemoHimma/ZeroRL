@@ -21,13 +21,14 @@ class SACAgent(object):
     def __init__(self, args, env, log_dir, device):
         
         # args
-        self.alpha = args.alpha
+        self.alpha = args.alpha 
         self.policy_decay = args.policy_decay
         self.value_lr = args.value_lr
         self.policy_lr = args.policy_lr
         self.polyak = args.polyak
         self.gamma = args.gamma
         self.batch_size = args.batch_size
+        self.target_update_freq = args.target_update_freq
 
 
         # declare_networks & declare_memory
@@ -64,6 +65,16 @@ class SACAgent(object):
         # Freeze Target
         for param in self.target_model.parameters():
             param.requires_grad = False
+
+        # auto_tune_alpha
+        self.auto_tune_alpha = args.auto_tune_alpha
+        if self.auto_tune_alpha:
+            self.target_entropy = -torch.prod(torch.Tensor(self.action_space.shape).to(self.device)).item()
+            self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
+            self.alpha_optim = optim.Adam([self.log_alpha], lr=args.alpha_lr)           
+       
+            
+            
 
     def declare_networks(self):
         self.model = GaussianActorMLPCritic(self.observation_space, self.action_space, **self.net_kwargs)
@@ -104,7 +115,7 @@ class SACAgent(object):
         policy_loss = (-q_value + self.alpha * log_prob).mean()
         #self.writer.add_scalar('step_policy_loss', policy_loss.detach().cpu().numpy(), timestep)
 
-        return policy_loss, log_prob.detach().mean().cpu().numpy(), q_value.detach().mean().cpu().numpy()
+        return policy_loss, log_prob, q_value.detach().mean().cpu().numpy()
 
     def compute_value_loss(self, batch_data, timestep):
         obs, acts, rews, next_obs, dones = batch_data
@@ -119,8 +130,8 @@ class SACAgent(object):
             target_q_value1 = self.target_model.critic1(next_obs, next_acts)
             target_q_value2 = self.target_model.critic2(next_obs, next_acts)
             target_q_value = torch.min(target_q_value1, target_q_value2)
-            #target_update = rews + self.gamma * (1 - dones) * (target_q_value - self.alpha * next_log_probs)
-            target_update = rews + self.gamma * (1 - dones) * target_q_value
+            target_update = rews + self.gamma * (1 - dones) * (target_q_value - self.alpha * next_log_probs)
+            #target_update = rews + self.gamma * (1 - dones) * target_q_value
         
         loss1 = F.mse_loss(current_q_value1, target_update)
         loss2 = F.mse_loss(current_q_value2, target_update)
@@ -130,16 +141,17 @@ class SACAgent(object):
         
         return loss
     
-    def update(self, update_times, timestep):
+    def update(self, update_times, totalstep):
         value_log = []
         policy_log = []
         log_prob_log = []
         q_value_log = []
+        alpha_log = []
 
         for i in range(update_times):
             batch_data = self.prepare_minibatch(self.batch_size)
 
-            value_loss = self.compute_value_loss(batch_data, timestep)
+            value_loss = self.compute_value_loss(batch_data, totalstep)
 
             self.critic_optimizer.zero_grad()
             value_loss.backward()
@@ -156,12 +168,12 @@ class SACAgent(object):
                     param.requires_grad = False
 
                 self.actor_optimizer.zero_grad()
-                policy_loss, log_prob, q_value = self.compute_policy_loss(batch_data, timestep) 
+                policy_loss, log_prob, q_value = self.compute_policy_loss(batch_data, totalstep) 
                 policy_loss.backward()
                 self.actor_optimizer.step()
 
                 policy_log.append(policy_loss.detach().cpu().numpy())
-                log_prob_log.append(log_prob)
+                log_prob_log.append(log_prob.detach().mean().cpu().numpy())
                 q_value_log.append(q_value)
 
 
@@ -171,13 +183,26 @@ class SACAgent(object):
                 for param in self.model.critic2.parameters():
                     param.requires_grad = True
 
+                # update alpha
+                if self.auto_tune_alpha:
+                    alpha_loss = -(self.log_alpha * (log_prob + self.target_entropy).detach()).mean()
+
+                    self.alpha_optim.zero_grad()
+                    alpha_loss.backward()
+                    self.alpha_optim.step()
+
+                    self.alpha = self.log_alpha.exp()
+                    alpha_to_log = self.alpha.clone()
+                    alpha_log.append(alpha_to_log.detach().cpu().numpy())
+
                 # soft update
-                with torch.no_grad():
-                    for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
-                        target_parma.data.mul_(self.polyak)
-                        target_parma.data.add_((1-self.polyak) * param.data)
+                if totalstep % self.target_update_freq == 0:
+                    with torch.no_grad():
+                        for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
+                            target_parma.data.mul_(self.polyak)
+                            target_parma.data.add_((1-self.polyak) * param.data)
         
-        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log)    
+        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log),np.mean(alpha_log)
 
 
         

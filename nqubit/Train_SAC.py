@@ -1,5 +1,5 @@
 import torch
-import os, glob
+import os, glob, json
 import numpy as np
 
 from tqdm import tqdm
@@ -16,28 +16,37 @@ from agents.SACAgent import SACAgent # Agent
 
 
 if __name__ == '__main__':
+
+    ########################### args & json & log_dir & writer ###################################
     args = get_args()
     sac_dict = vars(args)
-    with open(os.path.join(log_dir, 'params.json'), 'w') as f:
-        f.write(json.dumps)
 
     # log dir & summary writer
     current_dir = './results/'
     train_log_dir = '/sac_energy_new/' + 'nbit-' + str(args.nbit)
-    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'initial_state_2'
+    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'autotune-3'
     log_dir = current_dir + train_log_dir + exp_name 
-    writer = SummaryWriter(log_dir)
 
     try:
         os.makedirs(log_dir)
     except OSError:
-        pass
+        files = glob.glob(os.path.join(log_dir, 'events.out.tfevents*'))\
+            + glob.glob(os.path.join(log_dir, '*.dump')) \
+            + glob.glob(os.path.join(log_dir, '*.json'))
+        for f in files:
+            os.remove(f)
     
+    writer = SummaryWriter(log_dir)
+    sac_dict = vars(args)
 
+    with open(os.path.join(log_dir, 'params.json'), 'w') as f:
+        f.write(json.dumps(sac_dict, ensure_ascii=False, indent=4, separators=(',',':')))
+
+    ############################## Device & Env & RNG & Agent #####################
     # Device
     device = torch.device("cuda:{}".format(args.GPU))
     # Env
-    env = NqubitEnv(args.max_episode_steps, args.nbit, args.T)
+    env = NqubitEnv(args.episode_length, args.nbit, args.T)
 
     # RNG
     np.random.seed(args.seed)
@@ -47,16 +56,21 @@ if __name__ == '__main__':
     # Agent
     agent = SACAgent(args, env, log_dir, device)
 
+
+    #############################   Main Training Loop ############################
+    totalstep = 0
+
     # Training Loop
     for episode in tqdm(range(args.num_episodes)): # int(1e6)
         obs = env.reset()  # (9, )
-        episode_reward = []
 
-        for step in range(args.max_episode_steps): # (0, 1, 2)
-            timestep = episode * args.max_episode_steps + step + 1
+
+        for step in range(args.episode_length): # (0, 1, 2)
+            totalstep += 1
             
             # This if-else is used to increase initial exploration 
-            if timestep > args.start_to_exploit_steps:   # 900
+            if totalstep > args.random_steps:   # 900
+                # required extra exploration strategy
                 action = agent.get_action(obs, deterministic = False)
             else:
                 action = env.action_space.sample()
@@ -65,28 +79,26 @@ if __name__ == '__main__':
             prev_obs = obs
             obs, reward, done, info = env.step(action)
             
-            episode_reward.append(reward)
-            # log info
-                      
 
             # store ( sometimes is wrote into agent.update )
             agent.buffer.store(prev_obs, action, reward, obs, done)
 
             # when to update & how often we update
-            if timestep > args.learn_start_steps:
-                    value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, timestep)
+            if (totalstep > args.learn_start_steps) and (totalstep % args.update_freq_steps):
+                    value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
                     
-                    writer.add_scalar('value_loss', value_loss, timestep)
-                    writer.add_scalar('policy_loss', policy_loss, timestep)
-                    writer.add_scalar('log_prob', log_prob_mag, timestep)
-                    writer.add_scalar('q_value_prob', q_value_mag, timestep)
+                    writer.add_scalar('value_loss', value_loss, totalstep)
+                    writer.add_scalar('policy_loss', policy_loss, totalstep)
+                    writer.add_scalar('log_prob', log_prob_mag, totalstep)
+                    writer.add_scalar('q_value_prob', q_value_mag, totalstep)
+                    writer.add_scalar('alpha', alpha, totalstep)
             
             
             # log_state & action
-            #if timestep % args.log_state_action_steps == 0:
+            #if totalstep % args.log_state_action_steps == 0:
                 
-            #    writer.add_scalars('state_value', {'s0':obs[-6], 's1':obs[-5], 's2':obs[-4], 's3':obs[-3], 's4':obs[-2], 's5':obs[-1]}, timestep)
-            #    writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, timestep)
+            #    writer.add_scalars('state_value', {'s0':obs[-6], 's1':obs[-5], 's2':obs[-4], 's3':obs[-3], 's4':obs[-2], 's5':obs[-1]}, totalstep)
+            #    writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, totalstep)
 
             # test_agent
             
@@ -128,20 +140,20 @@ if __name__ == '__main__':
                 '''
             
                 #torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
-                #writer.add_scalar('test_episode_reward', avg_reward, timestep)
+                #writer.add_scalar('test_episode_reward', avg_reward, totalstep)
             
 
       
         writer.add_scalar('threshold', info['threshold'], episode)
-        if episode > (3 * int(args.start_to_exploit_steps/args.max_episode_steps)):
+        if episode > 10000:
             measure_state = info['solution']
             writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
 
-        writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
+        #writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
     torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
     env.close()
-    test_env.close()
+    
     writer.close()
 
                 

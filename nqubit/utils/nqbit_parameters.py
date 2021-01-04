@@ -14,14 +14,17 @@ def get_args():
 
     # Control Variable
     parser.add_argument('--num_episodes', type = int, default = int(1e4))
-    parser.add_argument('--max_episode_steps', type = int, default = 3) # 3
-    parser.add_argument('--start_to_exploit_steps', type = int, default = 1200) # 900
-    parser.add_argument('--learn_start_steps', type = int, default = 1200) # 900
+    parser.add_argument('--episode_length', type = int, default = 3) # 3
+    parser.add_argument('--random_steps', type = int, default = 128) # 900
+    parser.add_argument('--learn_start_steps', type = int, default = 128) # 900
+    parser.add_argument('--update_freq_steps', type=int, default= 30)
+    parser.add_argument('--target_update_freq', type=int, default = 100)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 128)
     parser.add_argument('--policy_lr', type = float, default = 3e-4)
     parser.add_argument('--value_lr', type = float, default = 3e-4)
+    parser.add_argument('--alpha_lr', type=float, default = 3e-4)
     parser.add_argument('--gamma', type = float, default = 0.99)
     parser.add_argument('--alpha', type = float, default = 0.02)
     parser.add_argument('--polyak', type = float, default = 0.995)
@@ -32,16 +35,19 @@ def get_args():
     parser.add_argument('--buffer_size', type = int, default = int(1e6))
 
     # Network Related
-    parser.add_argument('--actor_hidden_size', type = int, default = 64)  # 64 
+    parser.add_argument('--actor_hidden_size', type = int, default = 256)  # 64 
     parser.add_argument('--critic_hidden_size', type = int, default = 256)
-    parser.add_argument('--actor_log_std_min', type = int, default = -20)
-    parser.add_argument('--actor_log_std_max', type = int, default = -4)
+    parser.add_argument('--actor_log_std_min', type = int, default = -8)
+    parser.add_argument('--actor_log_std_max', type = int, default = -1)
+    
 
     # Log
     parser.add_argument('--log_state_action_steps', type = int, default = 100)
 
     # Test
     parser.add_argument('--n_initial_points', type=int, default=3)
+
+    parser.add_argument('--auto_tune_alpha', type = bool , default = True)
 
 
     args = parser.parse_args()
