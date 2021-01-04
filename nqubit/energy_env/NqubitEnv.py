@@ -212,7 +212,7 @@ class NqubitEnv5(gym.Env):
 class NqubitEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, max_episode_steps=3, nbit=9, T=9.18756103):
+    def __init__(self, max_episode_steps=3, nbit=9, T=9.18756103, reward_scale = 1):
         super(NqubitEnv, self).__init__()
         
         # one-hot encoding
@@ -237,6 +237,7 @@ class NqubitEnv(gym.Env):
 
         self.state = None  # s
         self.Pi = np.pi
+        self.reward_scale = reward_scale
 
         self.action_buffer = []
 
@@ -256,7 +257,7 @@ class NqubitEnv(gym.Env):
 
             reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
-            return self.state, reward, self.done, {'threshold':threshold, 'solution':measure_state}
+            return self.state, reward * self.reward_scale, self.done, {'threshold':threshold, 'solution':measure_state}
 
         self.counter += 1
 

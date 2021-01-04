@@ -130,7 +130,7 @@ class SACAgent(object):
             target_q_value1 = self.target_model.critic1(next_obs, next_acts)
             target_q_value2 = self.target_model.critic2(next_obs, next_acts)
             target_q_value = torch.min(target_q_value1, target_q_value2)
-            target_update = rews + self.gamma * (target_q_value - self.alpha * next_log_probs)
+            target_update = rews + self.gamma * (1-dones) * (target_q_value - self.alpha * next_log_probs)
             #target_update = rews + self.gamma * (1 - dones) * target_q_value
         
         loss1 = F.mse_loss(current_q_value1, target_update)

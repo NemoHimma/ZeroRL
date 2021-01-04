@@ -47,7 +47,9 @@ def get_args():
     # Test
     parser.add_argument('--n_initial_points', type=int, default=3)
 
+    # Tricks
     parser.add_argument('--auto_tune_alpha', type = bool , default = True)
+    parser.add_argument('--reward_scale', type = float, default= 30.0)
 
 
     args = parser.parse_args()
