@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument('--random_steps', type = int, default = 256) # 900
     parser.add_argument('--learn_start_steps', type = int, default = 256) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 30)
-    parser.add_argument('--target_update_freq', type=int, default = 200)
+    parser.add_argument('--target_update_freq', type=int, default = 50)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 128)
@@ -49,7 +49,7 @@ def get_args():
 
     # Tricks
     parser.add_argument('--auto_tune_alpha', type = bool , default = True)
-    parser.add_argument('--reward_scale', type = float, default= 30.0)
+    parser.add_argument('--reward_scale', type = float, default= 5.0)
 
 
     args = parser.parse_args()
