@@ -267,8 +267,8 @@ class NqubitEnv(gym.Env):
         self.counter = 0
         time_encoding = self.enc.transform([[self.counter]]).toarray()  # (1,3)
         
-        initial_action = np.zeros((6,) , dtype = np.float)
-        #initial_action = np.array([-0.01515305, -0.0022998, -0.00602785, 0.00275275, 0.01112909, -0.00420499], dtype=np.float)
+        #initial_action = np.zeros((6,) , dtype = np.float)
+        initial_action = np.array([-0.23904171, 0.16361157, -0.006147089, 0.04029985, -0.01864669, 0.01035279], dtype=np.float)
         self.state = np.hstack([time_encoding, np.reshape(initial_action, (1, 6))])[0]  # (1, 9) ---> (9, )
         self.done = False
         self.action_buffer = []
