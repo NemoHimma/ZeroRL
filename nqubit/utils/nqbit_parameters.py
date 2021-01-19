@@ -14,9 +14,9 @@ def get_args():
 
     # Control Variable
     parser.add_argument('--num_episodes', type = int, default = int(3e4))
-    parser.add_argument('--episode_length', type = int, default = 5) # 3
-    parser.add_argument('--random_steps', type = int, default = 256) # 900
-    parser.add_argument('--learn_start_steps', type = int, default = 256) # 900
+    parser.add_argument('--episode_length', type = int, default = 50) # 3
+    parser.add_argument('--random_steps', type = int, default = 128) # 900
+    parser.add_argument('--learn_start_steps', type = int, default = 128) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 30)
     parser.add_argument('--target_update_freq', type=int, default = 50)
 
@@ -37,8 +37,8 @@ def get_args():
     # Network Related
     parser.add_argument('--actor_hidden_size', type = int, default = 256)  # 64 
     parser.add_argument('--critic_hidden_size', type = int, default = 256)
-    parser.add_argument('--actor_log_std_min', type = int, default = -8)
-    parser.add_argument('--actor_log_std_max', type = int, default = -1)
+    parser.add_argument('--actor_log_std_min', type = int, default = -10)
+    parser.add_argument('--actor_log_std_max', type = int, default = -3)
     
 
     # Log
