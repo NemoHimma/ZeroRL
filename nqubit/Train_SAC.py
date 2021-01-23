@@ -10,7 +10,7 @@ from collections import deque
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_args  
 
-from energy_env.NqubitEnv import NqubitEnv  # Env
+from energy_env.NqubitEnv import NqubitEnv, NqubitEnvContinuous # Env
 
 from agents.SACAgent import SACAgent # Agent
 
@@ -23,8 +23,8 @@ if __name__ == '__main__':
 
     # log dir & summary writer
     current_dir = './results/'
-    train_log_dir = '/new_initial/' + 'nbit-' + str(args.nbit)
-    exp_name = '/T-' + str(format(args.T, '.3f')) + 'seed-' + str(args.seed) + 'scale-' + str(args.reward_scale) + 'length' + str(args.episode_length)
+    train_log_dir = '/NewEnvSetting/' + 'nbit-' + str(args.nbit)
+    exp_name = '/soft_constraint_entropy' 
     log_dir = current_dir + train_log_dir + exp_name 
 
     try:
@@ -37,16 +37,16 @@ if __name__ == '__main__':
             os.remove(f)
     
     writer = SummaryWriter(log_dir)
-    sac_dict = vars(args)
-
+    
     with open(os.path.join(log_dir, 'params.json'), 'w') as f:
         f.write(json.dumps(sac_dict, ensure_ascii=False, indent=4, separators=(',',':')))
 
     ############################## Device & Env & RNG & Agent #####################
     # Device
     device = torch.device("cuda:{}".format(args.GPU))
+
     # Env
-    env = NqubitEnv(args.episode_length, args.nbit, args.T, args.reward_scale)
+    env = NqubitEnv(args.nbit, args.reward_scale)
 
     # RNG
     np.random.seed(args.seed)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         obs = env.reset()  # (9, )
 
 
-        for step in range(args.episode_length): # (0, 1, 2)
+        for step in tqdm(range(args.episode_length)): # (0, 1, 2)
             totalstep += 1
             
             # This if-else is used to increase initial exploration 
@@ -79,19 +79,21 @@ if __name__ == '__main__':
             prev_obs = obs
             obs, reward, done, info = env.step(action)
             
+            
 
             # store ( sometimes is wrote into agent.update )
             agent.buffer.store(prev_obs, action, reward, obs, done)
 
             # when to update & how often we update
             if (totalstep > args.learn_start_steps) and (totalstep % args.update_freq_steps):
-                    value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
+                    #value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
+                    value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, totalstep)
                     
                     writer.add_scalar('value_loss', value_loss, totalstep)
                     writer.add_scalar('policy_loss', policy_loss, totalstep)
                     writer.add_scalar('log_prob', log_prob_mag, totalstep)
                     writer.add_scalar('q_value_prob', q_value_mag, totalstep)
-                    writer.add_scalar('alpha', alpha, totalstep)
+                    #writer.add_scalar('alpha', alpha, totalstep)
             
             
             # log_state & action
@@ -101,6 +103,10 @@ if __name__ == '__main__':
             #    writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, totalstep)
 
             # test_agent
+            if (totalstep % 10 ==0):
+                writer.add_scalar('threshold', info['threshold'], totalstep)
+                writer.add_scalar('reward', info['reward'], totalstep)
+                #writer.add_scalar('extra_reward', info['extra_reward'], totalstep)
             
             if info and (info['threshold'] >= -1.05):
                 pass
@@ -144,10 +150,10 @@ if __name__ == '__main__':
             
 
       
-        writer.add_scalar('threshold', info['threshold'], episode)
-        #if episode > 10000:
-        #    measure_state = info['solution']
-        #    writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
+        
+    
+        measure_state = info['solution']
+        writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
 
         #writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 

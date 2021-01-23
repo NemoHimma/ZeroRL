@@ -29,10 +29,10 @@ nqubits_para = {
 }
 
 Easy_evolution_time = {
-    '5':1.6344,
-    '6':3.326,
-    '7':5.006,
-    '9':9.187,
+    '5':1.6344, 
+    '6':3.326, 
+    '7':5.006, 
+    '9':9.187, 
     '10':13.066,
     '11':14.384,
     '13':24.572,
@@ -134,27 +134,168 @@ class NqubitEnvDiscrete(gym.Env):
 
 # version = '1.0.0' 
 class NqubitEnv(gym.Env):
+    '''
+
+    one-hot squencetial setting
+
+    s_0: [onehot(0), b_0]                   get a_0
+    s_1: [onehot(1), b_0 + a_0]             get a_1
+    s_2: [onehot(2), b_0 + a_0 + a_1]       get a_2
+    s_3: [onehot(3), b_0 + a_0 + a_1 + a2]  done = True
+
+    which require 4bit onehot label 
+    
+    length = 100
+    encoding = 10 + 10
+    measure_every_10steps
+
+
+    '''
+
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, max_episode_steps=3, nbit=9, T=9.18756103, reward_scale = 1):
+    def __init__(self, nbit=9, reward_scale = 1):
         super(NqubitEnv, self).__init__()
         
-        # one-hot encoding
-        self.enc = OneHotEncoder()
-        self.evolution_step = max_episode_steps
+        self.evolution_step = 10  # 
+
+        # one-hot encoding 
+        self.enc1 = OneHotEncoder()
+        self.enc2 = OneHotEncoder()
         time_label = np.reshape(np.array([i for i in range(self.evolution_step)]), (self.evolution_step, 1))
-        self.enc.fit(time_label)
-        
+        self.enc1.fit(time_label)
+        self.enc2.fit(time_label)
+
+        # Env
         self.action_space = spaces.Box(low = -0.01, high = 0.01, shape = (6, ), dtype = np.float32)
-        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(self.evolution_step + 6, ), dtype = np.float32)
+        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(26, ), dtype = np.float32)
 
         self.nbits = nbit # n 
         self.Numbers = nqubits_para[str(self.nbits)] # Numbers
         self.g = 1e-2   # g
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
+        self.T = Easy_evolution_time[str(self.nbits)] # T 
+
+        self.done = False
+        self.counter = 0
+        self.state = None  # s
+        
+        self.reward_scale = reward_scale
+        self.weights = [0.8, 0.6, 0.4, 0.2, 0.1]
         
 
-        self.T = T # T 
+
+    def step(self, action):
+
+        '''
+        counter: 0~99
+        '''
+        
+        
+        label1 = int(self.counter / 10)  # 十位数  
+        label2 = self.counter % 10  # 个位数
+
+        time_encoding1 = self.enc1.transform([[label1]]).toarray()
+        time_encoding2 = self.enc2.transform([[label2]]).toarray()
+
+        time_encoding = np.hstack([time_encoding1, time_encoding2])
+
+        b = copy.deepcopy(self.state[20:]) + action
+
+        self.state = np.hstack([time_encoding, np.reshape(b, (1, 6))])[0] # (1, 26) ---> (26, )
+
+        if (self.counter == 99):
+            self.done = True
+
+        self.counter += 1
+    
+        if (label2 == 9):
+
+            _, threshold = measure.CalcuFidelity(self.nbits, b, self.Hb, self.Hp_array, self.T, self.g)
+
+            reward = threshold
+
+            extra_reward = self.soft_constraint(b)
+            #reward = self.design_reward(threshold)
+
+            return self.state, reward * self.reward_scale + extra_reward , self.done, {'threshold':threshold, 'solution':b, 'reward':reward}
+
+        
+        return self.state, 0.0, self.done, {}
+
+    def design_reward(self, threshold):
+        d = -threshold - 0.9
+        return -1.0 * np.log(d)
+            
+
+        
+        
+    def reset(self):
+        self.counter = 0
+        time_encoding1 = self.enc1.transform([[self.counter]]).toarray()  
+        time_encoding2 = self.enc2.transform([[self.counter]]).toarray()
+        time_encoding = np.hstack([time_encoding1, time_encoding2])  # (1, 20) 
+        
+        #initial_action = np.zeros((6,) , dtype = np.float)
+        initial_state = np.zeros((6, ), dtype = np.float32)
+
+        self.state = np.hstack([time_encoding, np.reshape(initial_state, (1, 6))])[0]  # (1, 26) ---> (26, )
+        self.done = False
+        
+        return self.state
+
+    def MakeMatrix(self, n , Numbers):
+        lenthNumbers = len(Numbers)
+        Hp_array  = np.zeros((lenthNumbers,2**n),dtype = float)
+        Hb = HB.HB(n)
+
+        for i in range(len(Numbers)):
+            number = Numbers[i]
+            fact = HP.Factorization(number[0],number[1],number[2],number[3])
+            Hp_array[i][:]=fact.Hamiltonian_matrix()
+        
+        return Hb, Hp_array
+
+    def soft_constraint(self, b):
+        extra_list = [ self.weights[i] * (np.abs(b[i])-np.abs(b[i+1])) for i in range(5)]
+        extra_reward = np.sum(extra_list)
+        return extra_reward
+
+    def to_unit_cube(self, x, lb, ub):
+        """Project to [-1, 1]^d from hypercube with bounds lb and ub"""
+        xx = (x - lb) / (ub - lb)
+        xx = xx * 2 - 1
+        return xx
+
+
+
+class NqubitEnvContinuous(gym.Env):
+    '''
+
+    No One-hot setting
+
+    s_0: b_0              get a_0
+    s_1: b_0+a_0          get a_1
+    s_2: b_0+a_0+a_1      get a_2
+    s_3: b_0+a_0+a_1+a_2  done = True 
+
+    '''
+
+    metadata = {'render.modes': ['human']}
+    
+    def __init__(self, max_episode_steps=3, nbit=9, reward_scale = 1):
+        super(NqubitEnvContinuous, self).__init__()
+        
+        self.episode_length = max_episode_steps
+
+        self.action_space = spaces.Box(low = -0.1, high = 0.1, shape = (6, ), dtype = np.float)
+        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(6, ), dtype = np.float)
+
+        self.nbits = nbit # n 
+        self.Numbers = nqubits_para[str(self.nbits)] # Numbers
+        self.g = 1e-2   # g
+        self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
+        self.T = Easy_evolution_time[str(self.nbits)] # T 
 
         self.done = False
         self.counter = 0
@@ -162,40 +303,29 @@ class NqubitEnv(gym.Env):
         self.state = None  # s
         self.Pi = np.pi
         self.reward_scale = reward_scale
-
-        self.action_buffer = []
+        
 
 
     def step(self, action):
+        self.counter += 1
+        self.state += action
 
-        self.action_buffer.append(action)
-        
-        time_encoding = self.enc.transform([[self.counter]]).toarray()
-        self.state = np.hstack([time_encoding, np.reshape(action, (1, 6))])[0] # (1, 9) ---> (9, )
-    
-        if self.counter == (self.evolution_step - 1):
+        if (self.counter==self.episode_length):
 
             self.done = True
 
-            measure_state = np.sum(self.action_buffer, axis = 0)
 
-            reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
+            reward, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
 
-            return self.state, reward * self.reward_scale, self.done, {'threshold':threshold, 'solution':measure_state}
-
-        self.counter += 1
+            return self.state, threshold * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
 
         return self.state, 0.0, self.done, {}
         
     def reset(self):
+
         self.counter = 0
-        time_encoding = self.enc.transform([[self.counter]]).toarray()  # (1,3)
-        
-        #initial_action = np.zeros((6,) , dtype = np.float)
-        initial_action = np.array([-0.23904171, 0.16361157, -0.006147089, 0.04029985, -0.01864669, 0.01035279], dtype=np.float)
-        self.state = np.hstack([time_encoding, np.reshape(initial_action, (1, 6))])[0]  # (1, 9) ---> (9, )
+        self.state = np.zeros((6, ), dtype = np.float)
         self.done = False
-        self.action_buffer = []
         
         return self.state
 

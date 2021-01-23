@@ -111,7 +111,7 @@ class SACAgent(object):
         
        
 
-        #policy_loss = (-q_value + self.alpha * log_prob).mean()
+        #policy_loss = (-q_value).mean()
         policy_loss = (-q_value + self.alpha * log_prob).mean()
         #self.writer.add_scalar('step_policy_loss', policy_loss.detach().cpu().numpy(), timestep)
 
@@ -146,7 +146,8 @@ class SACAgent(object):
         policy_log = []
         log_prob_log = []
         q_value_log = []
-        alpha_log = []
+        #alpha_log = []
+        
 
         for i in range(update_times):
             batch_data = self.prepare_minibatch(self.batch_size)
@@ -202,7 +203,7 @@ class SACAgent(object):
                             target_parma.data.mul_(self.polyak)
                             target_parma.data.add_((1-self.polyak) * param.data)
         
-        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log),np.mean(alpha_log)
+        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log)#,np.mean(alpha_log)
 
 
         
