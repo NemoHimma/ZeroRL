@@ -154,10 +154,11 @@ class NqubitEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, nbit=9, reward_scale = 1):
+    def __init__(self, nbit=9, episode_length=100, reward_scale = 1):
         super(NqubitEnv, self).__init__()
         
         self.evolution_step = 10  # 
+        self.episode_length = episode_length # 100
 
         # one-hot encoding 
         self.enc1 = OneHotEncoder()
@@ -204,31 +205,34 @@ class NqubitEnv(gym.Env):
 
         self.state = np.hstack([time_encoding, np.reshape(b, (1, 6))])[0] # (1, 26) ---> (26, )
 
-        if (self.counter == 99):
+        if (self.counter == (self.episode_length - 1)):
             self.done = True
 
         self.counter += 1
     
         if (label2 == 9):
+        
+            neg_energy, threshold = measure.CalcuFidelity(self.nbits, b, self.Hb, self.Hp_array, self.T, self.g)
 
-            _, threshold = measure.CalcuFidelity(self.nbits, b, self.Hb, self.Hp_array, self.T, self.g)
-
+            #reward = self.design_reward(energy, threshold)
             reward = threshold
-
-            extra_reward = self.soft_constraint(b)
+            #extra_reward = self.soft_constraint(b)
             #reward = self.design_reward(threshold)
 
-            return self.state, reward * self.reward_scale + extra_reward , self.done, {'threshold':threshold, 'solution':b, 'reward':reward}
+            return copy.deepcopy(self.state), reward * self.reward_scale , self.done, {'threshold':threshold, 'solution':b, 'reward':reward}
 
         
-        return self.state, 0.0, self.done, {}
+        return copy.deepcopy(self.state), 0.0, self.done, {}
 
-    def design_reward(self, threshold):
-        d = -threshold - 0.9
-        return -1.0 * np.log(d)
-            
-
-        
+    def design_reward(self, energy, threshold):
+        if (threshold < -1.2):
+            reward = -0.5 
+        elif (threshold < -1.1):
+            reward = energy
+        else:
+            reward = -np.log(-threshold - 0.98) * 3
+        return reward          
+            # threshold [0, 0.2]  --> np.exp([0, 1]/0.2 )
         
     def reset(self):
         self.counter = 0
@@ -241,8 +245,9 @@ class NqubitEnv(gym.Env):
 
         self.state = np.hstack([time_encoding, np.reshape(initial_state, (1, 6))])[0]  # (1, 26) ---> (26, )
         self.done = False
+        obs = copy.deepcopy(self.state)
         
-        return self.state
+        return obs
 
     def MakeMatrix(self, n , Numbers):
         lenthNumbers = len(Numbers)

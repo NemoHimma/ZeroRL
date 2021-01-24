@@ -25,7 +25,7 @@ if __name__ == '__main__':
     current_dir = './results/'
     train_log_dir = '/NewEnvSetting/' + 'nbit-' + str(args.nbit)
     exp_name = '/soft_constraint_entropy' 
-    log_dir = current_dir + train_log_dir + exp_name 
+    log_dir = current_dir + train_log_dir + exp_name + args.name
 
     try:
         os.makedirs(log_dir)
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:{}".format(args.GPU))
 
     # Env
-    env = NqubitEnv(args.nbit, args.reward_scale)
+    env = NqubitEnv(args.nbit, args.episode_length, args.reward_scale)
 
     # RNG
     np.random.seed(args.seed)
