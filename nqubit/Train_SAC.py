@@ -23,8 +23,8 @@ if __name__ == '__main__':
 
     # log dir & summary writer
     current_dir = './results/'
-    train_log_dir = '/NewEnvSetting/' + 'nbit-' + str(args.nbit)
-    exp_name = '/soft_constraint_entropy' 
+    train_log_dir = '/NoOneHot/' + 'nbit-' + str(args.nbit)
+    exp_name = '/test5' 
     log_dir = current_dir + train_log_dir + exp_name + args.name
 
     try:

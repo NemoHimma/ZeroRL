@@ -288,48 +288,64 @@ class NqubitEnvContinuous(gym.Env):
 
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, max_episode_steps=3, nbit=9, reward_scale = 1):
+    def __init__(self, nbit=9, episode_length = 100, reward_scale = 1):
         super(NqubitEnvContinuous, self).__init__()
         
-        self.episode_length = max_episode_steps
+        # setting
+        self.episode_length = episode_length
 
-        self.action_space = spaces.Box(low = -0.1, high = 0.1, shape = (6, ), dtype = np.float)
-        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(6, ), dtype = np.float)
+        # Env
+        self.action_space = spaces.Box(low = -0.01, high = 0.01, shape = (6, ), dtype = np.float32)
+        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(6, ), dtype = np.float32)
 
+        # Measure Part
         self.nbits = nbit # n 
         self.Numbers = nqubits_para[str(self.nbits)] # Numbers
         self.g = 1e-2   # g
         self.Hb, self.Hp_array = self.MakeMatrix(self.nbits, self.Numbers) # Hb, Hp_array
         self.T = Easy_evolution_time[str(self.nbits)] # T 
 
+        # status variable
         self.done = False
         self.counter = 0
-
         self.state = None  # s
-        self.Pi = np.pi
         self.reward_scale = reward_scale
+       
         
-
-
     def step(self, action):
         self.counter += 1
+
+        '''
+        counter: 1~100
+        '''
+
         self.state += action
 
-        if (self.counter==self.episode_length):
+        if (self.counter % 10 ==0):
+            
 
-            self.done = True
+            neg_energy, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
 
+            reward = threshold
 
-            reward, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
+            if (self.counter == self.episode_length):
+                self.done = True
 
-            return self.state, threshold * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
+            return self.state, reward * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
+
 
         return self.state, 0.0, self.done, {}
+
+    def soft_constraint(self, b):
+        pass
+
+    def design_reward(self, threshold):
+        pass
         
     def reset(self):
 
         self.counter = 0
-        self.state = np.zeros((6, ), dtype = np.float)
+        self.state = np.zeros((6, ), dtype = np.float32)
         self.done = False
         
         return self.state
