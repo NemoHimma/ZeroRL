@@ -22,6 +22,7 @@ def get_args():
     parser.add_argument('--learn_start_steps', type = int, default = 300) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 200)
     parser.add_argument('--target_update_freq', type=int, default = 1000)
+    parser.add_argument('--measure_every_n_steps',type=int, default = 5)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 64)
@@ -29,7 +30,7 @@ def get_args():
     parser.add_argument('--value_lr', type = float, default = 3e-4)
     parser.add_argument('--alpha_lr', type=float, default = 5e-5)
     parser.add_argument('--gamma', type = float, default = 0.99)
-    parser.add_argument('--alpha', type = float, default = 0.2) # auto-tune
+    parser.add_argument('--alpha', type = float, default = 0.2) # auto-tune 
     parser.add_argument('--polyak', type = float, default = 0.995)
     parser.add_argument('--update_freq_per_step', type = int, default = 2)
     parser.add_argument('--policy_decay', type = int, default = 2)
@@ -40,7 +41,7 @@ def get_args():
     # Network Related
     parser.add_argument('--actor_hidden_size', type = int, default = 256)  # 64 
     parser.add_argument('--critic_hidden_size', type = int, default = 256)
-    parser.add_argument('--actor_log_std_min', type = int, default = -8)
+    parser.add_argument('--actor_log_std_min', type = int, default = -9)
     parser.add_argument('--actor_log_std_max', type = int, default = 0)
     
 
@@ -51,7 +52,7 @@ def get_args():
     parser.add_argument('--n_initial_points', type=int, default=3)
 
     # Tricks
-    parser.add_argument('--auto_tune_alpha', type = bool , default = False)
+    parser.add_argument('--auto_tune_alpha', type = bool , default = True)
     parser.add_argument('--reward_scale', type = float, default= 10.0)
 
 

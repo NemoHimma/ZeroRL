@@ -146,7 +146,7 @@ class SACAgent(object):
         policy_log = []
         log_prob_log = []
         q_value_log = []
-        #alpha_log = []
+        alpha_log = []
         
 
         for i in range(update_times):
@@ -203,7 +203,7 @@ class SACAgent(object):
                             target_parma.data.mul_(self.polyak)
                             target_parma.data.add_((1-self.polyak) * param.data)
         
-        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log)#,np.mean(alpha_log)
+        return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log),np.mean(alpha_log)
 
 
         

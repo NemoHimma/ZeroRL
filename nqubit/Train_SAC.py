@@ -46,7 +46,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:{}".format(args.GPU))
 
     # Env
-    env = NqubitEnv(args.nbit, args.episode_length, args.reward_scale)
+    env = NqubitEnvContinuous(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
 
     # RNG
     np.random.seed(args.seed)
@@ -86,14 +86,14 @@ if __name__ == '__main__':
 
             # when to update & how often we update
             if (totalstep > args.learn_start_steps) and (totalstep % args.update_freq_steps):
-                    #value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
-                    value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, totalstep)
+                    value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
+                    #value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, totalstep)
                     
                     writer.add_scalar('value_loss', value_loss, totalstep)
                     writer.add_scalar('policy_loss', policy_loss, totalstep)
                     writer.add_scalar('log_prob', log_prob_mag, totalstep)
                     writer.add_scalar('q_value_prob', q_value_mag, totalstep)
-                    #writer.add_scalar('alpha', alpha, totalstep)
+                    writer.add_scalar('alpha', alpha, totalstep)
             
             
             # log_state & action
@@ -105,7 +105,7 @@ if __name__ == '__main__':
             # test_agent
             if (totalstep % 10 ==0):
                 writer.add_scalar('threshold', info['threshold'], totalstep)
-                writer.add_scalar('reward', info['reward'], totalstep)
+                #writer.add_scalar('reward', info['reward'], totalstep)
                 #writer.add_scalar('extra_reward', info['extra_reward'], totalstep)
             
             if info and (info['threshold'] >= -1.05):

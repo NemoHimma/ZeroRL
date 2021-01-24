@@ -288,11 +288,12 @@ class NqubitEnvContinuous(gym.Env):
 
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, nbit=9, episode_length = 100, reward_scale = 1):
+    def __init__(self, nbit=9, episode_length = 100, measure_every_n_steps=10, reward_scale = 1):
         super(NqubitEnvContinuous, self).__init__()
         
         # setting
         self.episode_length = episode_length
+        self.measure_every_n_steps = measure_every_n_steps
 
         # Env
         self.action_space = spaces.Box(low = -0.01, high = 0.01, shape = (6, ), dtype = np.float32)
@@ -321,7 +322,7 @@ class NqubitEnvContinuous(gym.Env):
 
         self.state += action
 
-        if (self.counter % 10 ==0):
+        if (self.counter % self.measure_every_n_steps ==0):
             
 
             neg_energy, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
