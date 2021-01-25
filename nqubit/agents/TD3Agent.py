@@ -8,18 +8,18 @@ from buffer.ddpgBuffer import DDPGReplayBuffer
 
 # distangeled representation of actor & critic (or shared representation)
 class TD3Agent(object):
-    def __init__(self, config=None, env=None):
+    def __init__(self, args=None, env=None, log_dir=None, device=None):
         
-        # get hyperparameters from config
-        self.device = config.device
-        self.buffer_size = config.buffer_size
-        self.batch_size = config.batch_size
-        self.policy_lr = config.policy_lr
-        self.value_lr = config.value_lr
-        self.gamma = config.gamma
-        self.target_noise = config.target_noise
+        # get hyperparameters from args
+        self.device = device
+        self.buffer_size = args.buffer_size
+        self.batch_size = args.batch_size
+        self.policy_lr = args.policy_lr
+        self.value_lr = args.value_lr
+        self.gamma = args.gamma
+        self.target_noise = args.target_noise
         
-        self.polyak = config.polyak
+        self.polyak = args.polyak
 
         # Env Info
         self.observation_space = env.observation_space
@@ -30,9 +30,9 @@ class TD3Agent(object):
         self.act_limit = env.action_space.high[0]
 
         ## Control Variable
-        self.learn_start_steps = config.learn_start_steps
-        self.update_freq = config.update_freq
-        self.policy_decay = config.policy_decay
+        self.learn_start_steps = args.learn_start_steps
+        self.update_freq = args.update_freq_per_step
+        self.policy_decay = args.policy_decay
 
         # Construct Entities
         self.declare_networks()
@@ -127,9 +127,9 @@ class TD3Agent(object):
         act_batch = torch.from_numpy(self.buffer.acts_buf[idxs]).to(self.device)
         rew_batch = torch.from_numpy(self.buffer.rew_buf[idxs]).to(self.device)
         # pay attention to done_type
-        #done_batch = torch.from_numpy(self.buffer.done_buf[idxs]).to(self.device)
+        done_batch = torch.from_numpy(self.buffer.done_buf[idxs]).to(self.device)
 
-        return obs_batch, act_batch, rew_batch, next_obs_batch
+        return obs_batch, act_batch, rew_batch, next_obs_batch, done_batch
 
 
     def get_action(self, obs , noisy_scale):
@@ -152,7 +152,7 @@ class TD3Agent(object):
 # loss 
     def compute_value_loss(self, batch_data, target_noise):
 
-        obs, acts, rews, next_obs = batch_data # batch tensor
+        obs, acts, rews, next_obs, dones = batch_data # batch tensor
 
         current_q_value1 = self.model.critic1(obs, acts)
         current_q_value2 = self.model.critic2(obs, acts)
@@ -174,7 +174,7 @@ class TD3Agent(object):
             target_q1 = self.target_model.critic1(next_obs, next_acts) # action evaluation from current model
             target_q2 = self.target_model.critic2(next_obs, next_acts)
 
-            target_q_value = rews + self.gamma * torch.min(target_q1, target_q2)
+            target_q_value = rews + self.gamma * (1-dones) * torch.min(target_q1, target_q2)
 
        # print("target_q_value:{0}".format(target_q_value))
 
@@ -185,7 +185,7 @@ class TD3Agent(object):
         return value_loss1, value_loss2
 
     def compute_policy_loss(self, batch_data):
-        obs, _, _, _ = batch_data
+        obs, _, _, _,_ = batch_data
         q_value = self.model.critic1(obs, self.model.actor(obs))
         return -q_value.mean()
 

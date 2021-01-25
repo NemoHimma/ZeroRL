@@ -16,7 +16,7 @@ class MLPActor(nn.Module):
         self.actor_layer2 = nn.Linear(256, 256)
         self.actor_features = nn.Linear(256, act_dim)
 
-    def forward(self, obs): # Actorc
+    def forward(self, obs): # Actor
         actor_tmp = F.relu(self.actor_layer1(obs))
         actor_tmp = F.relu(self.actor_layer2(actor_tmp))
         actor_tmp = torch.tanh(self.actor_features(actor_tmp)) 

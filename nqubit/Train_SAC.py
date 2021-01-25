@@ -3,10 +3,9 @@ import os, glob, json
 import numpy as np
 
 from tqdm import tqdm
-from timeit import default_timer as timer
+
 from datetime import timedelta
 
-from collections import deque
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_args  
 

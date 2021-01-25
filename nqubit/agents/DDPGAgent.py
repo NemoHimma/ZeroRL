@@ -92,6 +92,7 @@ class DDPGAgent(object):
             for param in self.model.critic.parameters():
                 param.requires_grad = True
 
+            
             with torch.no_grad():
                 for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
                     target_parma.data.mul_(self.polyak)

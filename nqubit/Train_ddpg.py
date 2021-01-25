@@ -3,7 +3,6 @@ import os, glob, json
 import numpy as np
 from tqdm import tqdm
 from timeit import default_timer as timer
-from collections import deque
 
 
 from tensorboardX import SummaryWriter
