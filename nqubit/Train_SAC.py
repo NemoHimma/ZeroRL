@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # log dir & summary writer
     current_dir = './results/'
     train_log_dir = '/NoOneHot/' + 'nbit-' + str(args.nbit)
-    exp_name = '/test5' 
+    exp_name = '/reward_shaping'
     log_dir = current_dir + train_log_dir + exp_name + args.name
 
     try:
@@ -59,6 +59,8 @@ if __name__ == '__main__':
 
     #############################   Main Training Loop ############################
     totalstep = 0
+    best_b = None
+    best_threshold = -2.0
 
     # Training Loop
     for episode in tqdm(range(args.num_episodes)): # int(1e6)
@@ -103,8 +105,11 @@ if __name__ == '__main__':
             #    writer.add_scalars('log_action', {'a0':action[0], 'a1':action[1], 'a2':action[2], 'a3':action[3], 'a4':action[4], 'a5':action[5]}, totalstep)
 
             # test_agent
-            if (totalstep % 10 ==0):
+            if (totalstep % args.measure_every_n_steps == 0):
                 writer.add_scalar('threshold', info['threshold'], totalstep)
+                if info['threshold'] > best_threshold:
+                    best_threshold = info['threshold']
+                    best_b = info['solution']
                 #writer.add_scalar('reward', info['reward'], totalstep)
                 #writer.add_scalar('extra_reward', info['extra_reward'], totalstep)
             
@@ -158,6 +163,9 @@ if __name__ == '__main__':
         #writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
 
     torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
+    with open(os.path.join(log_dir, 'solution.text'), 'w') as f:
+        f.write('best_threshold:{0}, bset_solution:{1}'.format(best_threshold, best_b))
+
     env.close()
     
     writer.close()

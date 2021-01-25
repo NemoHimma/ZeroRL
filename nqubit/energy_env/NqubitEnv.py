@@ -311,6 +311,9 @@ class NqubitEnvContinuous(gym.Env):
         self.counter = 0
         self.state = None  # s
         self.reward_scale = reward_scale
+
+        # add constraints
+        self.weights = [0.8, 0.6, 0.4, 0.2, 0.1]
        
         
     def step(self, action):
@@ -328,20 +331,23 @@ class NqubitEnvContinuous(gym.Env):
             neg_energy, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
 
             reward = threshold
+            extra_reward = self.soft_constraint(copy.deepcopy(self.state))
 
             if (self.counter == self.episode_length):
                 self.done = True
 
-            return self.state, reward * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
-
+            return self.state, (reward + extra_reward) * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
 
         return self.state, 0.0, self.done, {}
 
     def soft_constraint(self, b):
-        pass
 
-    def design_reward(self, threshold):
-        pass
+        extra_list = [ self.weights[i] * (np.abs(b[i])-np.abs(b[i+1])) for i in range(5)]
+        extra_reward = np.sum(extra_list)
+        return extra_reward
+
+        
+
         
     def reset(self):
 
