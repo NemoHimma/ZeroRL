@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     # log dir & summary writer
     current_dir = './results'
-    train_log_dir = '/nbit-' + str(args.nbit) + '/sac'
+    train_log_dir = '/test_version' + str(args.nbit) + '/sac'
     exp_name = '/seed{0}'.format(args.seed)
     log_dir = current_dir + train_log_dir + exp_name 
 
@@ -87,14 +87,14 @@ if __name__ == '__main__':
 
             # when to update & how often we update
             if (totalstep > args.learn_start_steps) and (totalstep % args.update_freq_steps):
-                    value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
-                    #value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, totalstep)
+                    #value_loss, policy_loss, log_prob_mag, q_value_mag, alpha = agent.update(args.update_freq_per_step, totalstep)
+                    value_loss, policy_loss, log_prob_mag, q_value_mag = agent.update(args.update_freq_per_step, totalstep)
                     
                     writer.add_scalar('value_loss', value_loss, totalstep)
                     writer.add_scalar('policy_loss', policy_loss, totalstep)
                     writer.add_scalar('log_prob', log_prob_mag, totalstep)
                     writer.add_scalar('q_value_prob', q_value_mag, totalstep)
-                    writer.add_scalar('alpha', alpha, totalstep)
+                    # logwriter.add_scalar('alpha', alpha, totalstep)
             
             
             # log_state & action

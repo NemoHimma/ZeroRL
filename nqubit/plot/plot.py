@@ -15,6 +15,7 @@ smooth = True
 smooth_index = 150 # [1, +max), could be changed into 1
 threshold_len = 0 # == 10000? if (threshold_len>10000): threshold <- 10000
 linewidth = 0.5 # linewidth of the figure line
+scatter_space = 100 #
 color_dictionary = {
     0: "#0000FF", 1: "#0E0F0F", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
     5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",
@@ -30,13 +31,24 @@ linestyle_dictionary = {
 
 def mean_std_fillcolor_plot(thresholds, color, label, marker):
     thresholds_mean = thresholds.mean(axis = 0)
+
     x = [i for i in range(len(thresholds_mean))]
     thresholds_std = thresholds.std(axis = 0)
     superbound = thresholds_mean + thresholds_std
     lowerbound = thresholds_mean - thresholds_std
 
-    plt.plot(x, thresholds_mean, color=color, label=label, linewidth=linewidth, marker=marker, ) 
-    plt.scatter(x, thresholds_mean, color=color, marker=markers[i])
+    x_scatter = np.zeros(0)
+    print("x_scatter: ", x_scatter)
+    scatter_index = 0
+    while(True):
+        x_scatter = np.concatenate((x_scatter, x[scatter_index]), axis = 0)
+        scatter_index += scatter_space
+        if (scatter_index >= x.length()):
+            break
+    print("x_scatter: ", x_scatter)
+
+    plt.plot(x, thresholds_mean, color=color, label=label, linewidth=linewidth, marker=marker) 
+    plt.scatter(x, thresholds_mean, color=color, marker=marker)
     plt.fill_between(x, superbound, lowerbound, where=superbound>=lowerbound, facecolor=color, interpolate=True, alpha=0.2)
     return
 
@@ -72,7 +84,7 @@ def plot_func(dirs, color, label, marker):
 
 #-------------------------------------------------------------------------------------
 # dir func:
-original_path = "../results/nbit-5/*"
+original_path = "../plot/nbit-5/*"
 method_paths = glob.glob(original_path) # paths type:string list
 methodname_list = list()
 for i in range(len(method_paths)):

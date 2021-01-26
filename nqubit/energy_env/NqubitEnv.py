@@ -215,7 +215,7 @@ class NqubitEnv(gym.Env):
             neg_energy, threshold = measure.CalcuFidelity(self.nbits, b, self.Hb, self.Hp_array, self.T, self.g)
 
             #reward = self.design_reward(energy, threshold)
-            reward = threshold
+            reward = neg_energy
             #extra_reward = self.soft_constraint(b)
             #reward = self.design_reward(threshold)
 
@@ -347,8 +347,6 @@ class NqubitEnvContinuous(gym.Env):
         return extra_reward
 
         
-
-        
     def reset(self):
 
         self.counter = 0
@@ -397,9 +395,9 @@ class NqubitEnvOneHot(gym.Env):
         self.counter = 0
 
         self.state = None  # s
-        self.Pi = np.pi
+        #self.Pi = np.pi
 
-        self.action_buffer = []
+        #self.action_buffer = []
 
 
     def step(self, action):
@@ -417,14 +415,14 @@ class NqubitEnvOneHot(gym.Env):
 
         reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
-        if self.counter == (self.evolution_step-1) :
+        if self.counter == (self.evolution_step - 1) :
 
             self.done = True
 
             #measure_state = np.sum(self.action_buffer, axis = 0)
-            measure_state  = b
+            #measure_state  = b
 
-            reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
+            #reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
             return self.state, reward, self.done, {'threshold':threshold, 'solution':measure_state}
 
