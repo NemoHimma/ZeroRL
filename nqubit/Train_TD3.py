@@ -14,8 +14,8 @@ if __name__ == '__main__':
     td3_dict = vars(args)
 
     train_log_dir = './results'
-    algo_name = '/td3/' + 'nbit-{0}'.format(str(args.nbit))
-    exp_name = '/linear_decay_td3'
+    algo_name = '/nbit-{0}'.format(str(args.nbit)) + '/td3'
+    exp_name = '/seed{0}'.format(args.seed)
     log_dir = train_log_dir + algo_name + exp_name
 
     try:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
             if (totalstep > args.learn_start_steps) and (totalstep % args.update_freq_steps):
         
-                value_loss, policy_loss = agent.update(args.update_freq_per_step, target_noise)
+                value_loss, policy_loss = agent.update(args.update_freq_per_step, target_noise, totalstep)
                 # log info
                 writer.add_scalar('value_loss', value_loss, totalstep)
                 writer.add_scalar('policy_loss', policy_loss, totalstep)
@@ -116,6 +116,8 @@ if __name__ == '__main__':
                     print('still learning')
         '''
         measure_state = info['solution']
+        episode_reward = info['threshold']
+        writer.add_scalar('episode_reward',info['threshold'], episode)
         writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
 
     torch.save(agent.model.state_dict(), os.path.join(log_dir, 'td3_model.dump'))

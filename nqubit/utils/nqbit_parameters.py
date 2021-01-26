@@ -21,8 +21,8 @@ def get_args():
     parser.add_argument('--random_steps', type = int, default = 200) # 900
     parser.add_argument('--learn_start_steps', type = int, default = 300) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 200)
-    parser.add_argument('--target_update_freq', type=int, default = 1000)
-    parser.add_argument('--measure_every_n_steps',type=int, default = 5)
+    parser.add_argument('--target_update_freq', type=int, default = 500)
+    parser.add_argument('--measure_every_n_steps',type=int, default = 2)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 64)
@@ -124,8 +124,8 @@ def get_ddpg_args():
     parser.add_argument('--random_steps', type = int, default = 200) # 900
     parser.add_argument('--learn_start_steps', type = int, default = 300) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 200)
-    parser.add_argument('--target_update_freq', type=int, default = 1000)
-    parser.add_argument('--measure_every_n_steps',type=int, default = 10)
+    parser.add_argument('--target_update_freq', type=int, default = 500)
+    parser.add_argument('--measure_every_n_steps',type=int, default = 2)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 64)
@@ -178,8 +178,8 @@ def get_td3_args():
     parser.add_argument('--random_steps', type = int, default = 200) # 900
     parser.add_argument('--learn_start_steps', type = int, default = 300) # 900
     parser.add_argument('--update_freq_steps', type=int, default= 200)
-    parser.add_argument('--target_update_freq', type=int, default = 1000)
-    parser.add_argument('--measure_every_n_steps',type=int, default = 10)
+    parser.add_argument('--target_update_freq', type=int, default = 500)
+    parser.add_argument('--measure_every_n_steps',type=int, default = 2)
 
     # update related 
     parser.add_argument('--batch_size', type = int, default = 64)

@@ -18,6 +18,7 @@ class TD3Agent(object):
         self.value_lr = args.value_lr
         self.gamma = args.gamma
         self.target_noise = args.target_noise
+        self.target_update_freq = args.target_update_freq
         
         self.polyak = args.polyak
 
@@ -65,7 +66,7 @@ class TD3Agent(object):
 
 ##################### Key Update Part ##########################
 
-    def update(self, update_times, target_noise):
+    def update(self, update_times, target_noise, totalstep):
         # if num_step < self.learn_start_steps:
         #    return None
         value_log = []
@@ -104,7 +105,8 @@ class TD3Agent(object):
                 
                 for param in self.model.critic2.parameters():
                     param.requires_grad = True
-
+                
+            if totalstep % self.target_update_freq == 0:
                 with torch.no_grad():
                     for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
                         target_parma.data.mul_(self.polyak)

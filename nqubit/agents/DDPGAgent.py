@@ -20,6 +20,7 @@ class DDPGAgent(object):
         self.learn_start_steps = args.learn_start_steps
         self.update_freq = args.update_freq_per_step
         self.polyak = args.polyak
+        self.target_update_freq = args.target_update_freq
 
         # Env Info
         self.observation_space = env.observation_space
@@ -59,7 +60,7 @@ class DDPGAgent(object):
 
 ##################### Key Update Part ##########################
 
-    def update(self):
+    def update(self, totalstep):
         # if num_step < self.learn_start_steps:
         #    return None
 
@@ -92,7 +93,8 @@ class DDPGAgent(object):
             for param in self.model.critic.parameters():
                 param.requires_grad = True
 
-            
+        #if totalstep % self.target_update_freq == 0:
+        if totalstep % self.target_update_freq == 0:
             with torch.no_grad():
                 for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
                     target_parma.data.mul_(self.polyak)

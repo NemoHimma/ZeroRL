@@ -21,10 +21,10 @@ if __name__ == '__main__':
     sac_dict = vars(args)
 
     # log dir & summary writer
-    current_dir = './results/'
-    train_log_dir = '/NoOneHot/' + 'nbit-' + str(args.nbit)
-    exp_name = '/reward_shaping'
-    log_dir = current_dir + train_log_dir + exp_name + args.name
+    current_dir = './results'
+    train_log_dir = '/nbit-' + str(args.nbit) + '/sac'
+    exp_name = '/seed{0}'.format(args.seed)
+    log_dir = current_dir + train_log_dir + exp_name 
 
     try:
         os.makedirs(log_dir)
@@ -157,6 +157,8 @@ if __name__ == '__main__':
         
     
         measure_state = info['solution']
+        episode_reward = info['threshold']
+        writer.add_scalar('episode_reward',info['threshold'], episode)
         writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
 
         #writer.add_scalar('episode_reward', np.sum(np.array(episode_reward)), episode)
