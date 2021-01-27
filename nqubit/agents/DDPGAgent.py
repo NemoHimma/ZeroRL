@@ -94,7 +94,7 @@ class DDPGAgent(object):
                 param.requires_grad = True
 
         #if totalstep % self.target_update_freq == 0:
-        if totalstep % self.target_update_freq == 0:
+        
             with torch.no_grad():
                 for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
                     target_parma.data.mul_(self.polyak)
@@ -123,12 +123,14 @@ class DDPGAgent(object):
 
 
     def get_action(self, obs , noisy_scale):
+        
         '''
         Make Sure Input obs is numpy.array
         OutPut act is numpy.array
         '''
 
-        obs = torch.from_numpy(obs).to(self.device)
+        obs = torch.as_tensor(obs, dtype = torch.float32).to(self.device)
+       #obs = torch.from_numpy(obs).to(self.device)
         with torch.no_grad():
             a = self.model.actor(obs)
         

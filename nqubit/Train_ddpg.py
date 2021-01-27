@@ -15,7 +15,7 @@ if __name__ == '__main__':
     ddpg_dict = vars(args)
 
     current_dir = './results'
-    algo_name =  '/nbit-{0}'.format(str(args.nbit)) + '/ddpg'
+    algo_name =  '/latest_version{0}'.format(args.nbit) + '/ddpg'
     exp_name = '/seed{0}'.format(args.seed) 
     log_dir = current_dir + algo_name + exp_name
 
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
         measure_state = info['solution']
         episode_reward = info['threshold']
-        writer.add_scalar('episode_reward',info['threshold'], episode)
+        writer.add_scalar('episode_reward', episode_reward, episode)
         writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
     
 

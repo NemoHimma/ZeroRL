@@ -3,10 +3,9 @@ import os, glob, json
 import numpy as np
 from tqdm import tqdm
 
-
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_td3_args
-from energy_env.NqubitEnv import NqubitEnvContinuous  # Env
+from energy_env.NqubitEnv import NqubitEnvOneHot  # Env
 from agents.TD3Agent import TD3Agent # Agent
 
 if __name__ == '__main__':
@@ -14,7 +13,7 @@ if __name__ == '__main__':
     td3_dict = vars(args)
 
     train_log_dir = './results'
-    algo_name = '/nbit-{0}'.format(str(args.nbit)) + '/td3'
+    algo_name = '/latest_version{0}'.format(args.nbit) + '/td3'
     exp_name = '/seed{0}'.format(args.seed)
     log_dir = train_log_dir + algo_name + exp_name
 
@@ -31,7 +30,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:{}".format(args.GPU))
 
     # Env
-    env = NqubitEnvContinuous(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
+    env = NqubitEnvOneHot(args.episode_length, args.nbit, args.measure_every_n_steps, args.reward_scale)
     act_limit = env.action_space.high[0]
 
     # rng
@@ -50,6 +49,7 @@ if __name__ == '__main__':
     # Training Loop
     for episode in tqdm(range(args.num_episodes)):
         obs = env.reset()
+        episode_reward = []
         
         action_noise = (1.0 - episode/args.num_episodes) * args.action_noise
         target_noise = (1.0 - episode/args.num_episodes) * args.target_noise
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             else:
                 action = env.action_space.sample()
 
-        # Excute
+        # Execute
             prev_obs = obs
             obs, reward, done, info = env.step(action)
         
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                 writer.add_scalar('policy_loss', policy_loss, totalstep)
 
             if (totalstep % args.measure_every_n_steps ==0):
-                writer.add_scalar('threshold', info['threshold'], totalstep)
+                writer.add_scalar('step_threshold', info['threshold'], totalstep)
                 if info['threshold'] > best_threshold:
                     best_threshold = info['threshold']
                     best_b = info['solution']
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         '''
         measure_state = info['solution']
         episode_reward = info['threshold']
-        writer.add_scalar('episode_reward',info['threshold'], episode)
+        writer.add_scalar('episode_reward',episode_reward, episode)
         writer.add_scalars('soluiton', {'s0':measure_state[0], 's1':measure_state[1], 's2':measure_state[2], 's3':measure_state[3],'s4':measure_state[4],'s5':measure_state[5]}, episode)
 
     torch.save(agent.model.state_dict(), os.path.join(log_dir, 'td3_model.dump'))

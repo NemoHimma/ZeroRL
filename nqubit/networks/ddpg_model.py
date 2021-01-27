@@ -3,6 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def weights_init_(m):
+    if isinstance(m, nn.Linear):
+        torch.nn.init.xavier_uniform_(m.weight, gain=1.414)
+        torch.nn.init.constant_(m.bias, 0)
+
 class MLPActor(nn.Module):
 
     def __init__(self, observation_space, action_space):
@@ -15,6 +20,8 @@ class MLPActor(nn.Module):
         self.actor_layer1 = nn.Linear(obs_dim, 256)
         self.actor_layer2 = nn.Linear(256, 256)
         self.actor_features = nn.Linear(256, act_dim)
+
+        self.apply(weights_init_)
 
     def forward(self, obs): # Actorc
         actor_tmp = F.relu(self.actor_layer1(obs))
@@ -39,6 +46,7 @@ class MLPCritic(nn.Module):
         
         self.q_value_layer2 = nn.Linear(256, 256)
         self.q_value = nn.Linear(256, 1)
+        self.apply(weights_init_)
 
     def forward(self, obs, act):
         q = torch.cat([obs, act], dim=-1) #(batch_size, concated_obs_act)

@@ -197,11 +197,11 @@ class SACAgent(object):
                     #alpha_log.append(alpha_to_log.detach().cpu().numpy())
 
                 # soft update
-                if totalstep % self.target_update_freq == 0:
-                    with torch.no_grad():
-                        for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
-                            target_parma.data.mul_(self.polyak)
-                            target_parma.data.add_((1-self.polyak) * param.data)
+            if totalstep % self.target_update_freq == 0:
+                with torch.no_grad():
+                    for param, target_parma in zip(self.model.parameters(), self.target_model.parameters()):
+                        target_parma.data.mul_(self.polyak)
+                        target_parma.data.add_((1-self.polyak) * param.data)
         
         return np.mean(value_log), np.mean(policy_log),np.mean(log_prob_log), np.mean(q_value_log)#,np.mean(alpha_log)
 
