@@ -169,6 +169,7 @@ if __name__ == '__main__':
                 f.write('best_threshold:{0}, bset_solution:{1}'.format(best_threshold, best_b))
 
     torch.save(agent.model.state_dict(), os.path.join(log_dir, 'sac_model.dump'))
+   
     
 
     env.close()

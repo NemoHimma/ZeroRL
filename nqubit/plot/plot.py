@@ -10,10 +10,10 @@ import re
 import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-title_name = "nbit-5"
-original_path = "../results/latest_version5/*"
+title_name = "nbit-7"
+original_path = "../results/latest_version7/*"
 smooth = True
-smooth_index = 50 # [1, +max), could be changed into 1
+smooth_index = 4 # [1, +max), could be changed into 1
 threshold_len = 10000 # == 10000? if (threshold_len>10000): threshold <- 10000
 linewidth = 1.0 # linewidth of the figure line
 scatter_space = 100 # mark space out each (scatter_space) point
