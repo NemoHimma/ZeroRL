@@ -9,10 +9,10 @@ dqn_path = './results/DQN_data/5/*'
 
 
 color_dictionary = {
-    0: "#0000FF", 1: "#E74C3C", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
+    0: "#1F618D", 1: "#F322CD", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
     5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",
     10: "#D35400", 11: "#800000", 12: "#0E0F0F", 13: "#F1948A", 14: "#1C2833",
-    15: "#F322CD", 16: "#1F618D"
+    15: "#E74C3C", 16: "#0000FF"
 }
 marker_dictionary = {
     0:"o", 1:"^", 2:"D", 3:"x"
@@ -22,7 +22,7 @@ linestyle_dictionary = {
 }
 
 
-def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.1, linewidth=1.0, scatter_space = 400):
+def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=1.0, scatter_space = 400):
     
     ##### extrat data from all seeds #####
     y_seeds = []
@@ -102,7 +102,7 @@ def main_plot():
     print('start plotting')
     # plot axes
     ax_count = 0
-    for nbit in [7, 7, 7]:                                   # key_part to change [5, 6, 7]
+    for nbit in [5, 6, 7]:                                   # key_part to change [5, 6, 7]
         print('plotting {0} axes'.format(ax_count + 1))
         data_path_n = '../results/latest_version{0}/*'.format(nbit)
         final_path, method_names = dir_process(data_path_n)
