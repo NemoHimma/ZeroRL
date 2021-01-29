@@ -95,9 +95,9 @@ def main_plot():
 
     # config respective axes
     for i in range(3):
-        axs[i].set_xlabel('# episode', fontsize = 14)
-        axs[i].set_ylabel('reward', fontsize = 14)
-        axs[i].set_title('{0}-bits'.format(i + 5), fontsize = 16)
+        axs[i].set_xlabel('# episode', fontsize = 16)
+        axs[i].set_ylabel('reward', fontsize = 16)
+        axs[i].set_title('{0}-bits'.format(i + 5), fontsize = 20)
 
     print('start plotting')
     # plot axes
@@ -111,7 +111,7 @@ def main_plot():
 
         ax_count += 1
     
-    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3)
+    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 20)
 
     ###
     limits = [3000, 5000, 8000, 10000]
@@ -121,6 +121,11 @@ def main_plot():
     for limit in limits:
         for i in range(3):
             axs[i].set_xlim(0, limit)
+            for label in axs[i].xaxis.get_ticklabels():
+                label.set_fontsize(12)
+            for label in axs[i].yaxis.get_ticklabels():
+                label.set_fontsize(12)
+            
         plt.savefig('{}episodes.jpg'.format(limit), dpi = 100, bbox_inches='tight')
         
 
