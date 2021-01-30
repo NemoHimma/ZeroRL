@@ -5,14 +5,13 @@ import re
 import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-dqn_path = './results/DQN_data/5/*'
 
 
 color_dictionary = {
-    0: "#1F618D", 1: "#F322CD", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
+    0: "#1F618D", 1: "#F322CD", 2: "#0E0F0F", 3: "#7FB3D5", 4: "#22DAF3",
     5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",
-    10: "#D35400", 11: "#800000", 12: "#0E0F0F", 13: "#F1948A", 14: "#1C2833",
-    15: "#E74C3C", 16: "#0000FF"
+    10: "#D35400", 11: "#800000", 12: "#2980B9", 13: "#F1948A", 14: "#1C2833",
+    15: "#E74C3C", 16: "#0000FF" 
 }
 marker_dictionary = {
     0:"o", 1:"^", 2:"D", 3:"x"
@@ -23,7 +22,9 @@ linestyle_dictionary = {
 
 
 def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=1.0, scatter_space = 400):
-    
+    '''
+    input: method_dirs : ['algo1/seed1','~algo1/seed4']
+    '''
     ##### extrat data from all seeds #####
     y_seeds = []
     y_length = []
@@ -74,6 +75,7 @@ def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5,
 def dir_process(data_path):
     '''
     data_path = './results/latest_version5/*'
+    final_path = '[['algo1/seed1','~algo1/seed4'], ['~/algo2/seed1', '~/algo2/seed4']]'
     '''
 
     method_paths = glob.glob(data_path)
@@ -103,9 +105,21 @@ def main_plot():
     # plot axes
     ax_count = 0
     for nbit in [5, 6, 7]:                                   # key_part to change [5, 6, 7]
+        # td3,sac,ddpg dirs
         print('plotting {0} axes'.format(ax_count + 1))
         data_path_n = '../results/latest_version{0}/*'.format(nbit)
         final_path, method_names = dir_process(data_path_n)
+
+        '''
+        # dqn_dirs
+        dqn_data_path = '../results/DQN_data/{0}/'.format(nbit)
+        path_to_txt = get_txt_path(dqn_data_path)
+        
+        final_path.append(path_to_txt[0:4])
+        method_names.append('dqn')
+        '''
+
+        # plot 4 curve for 3 axes
         for i in range(len(method_names)):
             plot_func(axs[ax_count], final_path[i], color_dictionary[i], method_names[i], marker_dictionary[i])
 
@@ -133,3 +147,4 @@ def main_plot():
 
 if __name__ == '__main__':
     main_plot()
+    

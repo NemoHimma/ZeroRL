@@ -22,8 +22,8 @@ if __name__ == '__main__':
 
     # log dir & summary writer
     current_dir = './results'
-    train_log_dir = '/latest_version' + str(args.nbit) + '/sac'
-    exp_name = '/seed{0}'.format(args.seed)
+    train_log_dir = '/latest_episode_length' + str(args.nbit) + '/sac'
+    exp_name = '/episode_length{0}'.format(args.episode_length)
     log_dir = current_dir + train_log_dir + exp_name 
 
     try:
