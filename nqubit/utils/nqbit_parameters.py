@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument('--seed', type = int, default = 1)
 
     # Control Variable
-    parser.add_argument('--num_episodes', type = int, default = int(5e3))        # int(1e4)
+    parser.add_argument('--num_episodes', type = int, default = int(1e4))        # int(1e4)
     parser.add_argument('--episode_length', type = int, default = 30)            # 30 for one-hot
     parser.add_argument('--random_steps', type = int, default = 2000)            # 2000
     parser.add_argument('--learn_start_steps', type = int, default = 2000)       # 2000
