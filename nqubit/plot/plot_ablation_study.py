@@ -89,11 +89,12 @@ def plot_reward_scale(ax, data_path_n, n, linewidth = 2.0, scatter_space = 1000,
         label.set_fontsize(16)
 
     print("saving")
-    plt.savefig('{}-reward-scale.jpg'.format(n), dpi = 100, bbox_inches='tight')
+    plt.savefig('{}-episode_length.jpg'.format(n), dpi = 100, bbox_inches='tight')
 
 if __name__ == '__main__':
     fig, ax = plt.subplots(1, 1, figsize=(25, 16))
-    data_path = '../results/latest_reward_sacle5/sac/*'
+   # data_path = '../results/latest_reward_sacle5/sac/*'
+    data_path = '../results/latest_episode_length5/sac/*'
     plot_reward_scale(ax, data_path, 5)
 
     

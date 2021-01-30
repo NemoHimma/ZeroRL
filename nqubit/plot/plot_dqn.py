@@ -57,7 +57,7 @@ def read_data_from_txt(path_to_single_txt):
 
     return step_threshold
 
-def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 2.0, scatter_space = 1000, smooth_index=60):
+def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 3.0, scatter_space = 1000, smooth_index=60):
     '''
     input: dqn_path_n = '../results/DQN_data/5/'
     '''
@@ -67,9 +67,9 @@ def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 2.0, scatter_space = 1000, smo
     if num_curves > 4:
         num_curves = 4
 
-    ax.set_xlabel('#step', fontsize = 20)
-    ax.set_ylabel('reward', fontsize = 20)
-    ax.set_title('{0}-bit'.format(n), fontsize = 20)
+    ax.set_xlabel('#step', fontsize = 30)
+    ax.set_ylabel('reward', fontsize = 30)
+  #ax.set_title('{0}-bit'.format(n), fontsize = 20)
 
     # read_data
     data = []
@@ -98,20 +98,21 @@ def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 2.0, scatter_space = 1000, smo
     label = ['{}-run'.format(i+1) for i in range(num_curves)]
 
     for num in range(num_curves):
-        ax.plot(index, data[num][:], color=color_dictionary[num], linewidth= linewidth)
+        ax.plot(index, data[num][:], color=color_dictionary[num], linewidth= linewidth, markersize=12)
 
         x_scatter = np.linspace(0, min_length-1, int(min_length/scatter_space), dtype=np.int)
         y_scatter = data[num][x_scatter]
         ax.scatter(x_scatter, y_scatter, color=color_dictionary[num], label=label[num], marker=marker_dictionary[num])
 
     
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=num_curves, fontsize = 20)
+    ax.legend(loc='lower right', fontsize = 20,markerscale=2)
 
 
     for label in ax.xaxis.get_ticklabels():
-        label.set_fontsize(16)
+        label.set_fontsize(20)
     for label in ax.yaxis.get_ticklabels():
-        label.set_fontsize(16)
+        label.set_fontsize(20)
+        
 
     plt.savefig('{}-bit-dqn.jpg'.format(n), dpi = 100, bbox_inches='tight')
         

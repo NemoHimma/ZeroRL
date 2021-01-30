@@ -21,7 +21,7 @@ linestyle_dictionary = {
 }
 
 
-def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=1.0, scatter_space = 400):
+def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=3.0, scatter_space = 400):
     '''
     input: method_dirs : ['algo1/seed1','~algo1/seed4']
     '''
@@ -125,7 +125,7 @@ def main_plot():
 
         ax_count += 1
     
-    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 20)
+    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 25,markerscale=2.0)
 
     ###
     limits = [3000, 5000, 8000, 10000]
@@ -136,9 +136,9 @@ def main_plot():
         for i in range(3):
             axs[i].set_xlim(0, limit)
             for label in axs[i].xaxis.get_ticklabels():
-                label.set_fontsize(12)
+                label.set_fontsize(20)
             for label in axs[i].yaxis.get_ticklabels():
-                label.set_fontsize(12)
+                label.set_fontsize(20)
             
         plt.savefig('{}episodes.jpg'.format(limit), dpi = 100, bbox_inches='tight')
         
