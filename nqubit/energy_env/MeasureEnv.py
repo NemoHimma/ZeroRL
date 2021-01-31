@@ -51,11 +51,11 @@ Hard_evolution_time = {
 }
 
 
-class NqubitEnvOneHot(gym.Env):
+class MeasureEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     
     def __init__(self, max_episode_steps=30, nbit=5, measure_every_n_steps=1, reward_scale=5.0):
-        super(NqubitEnvOneHot, self).__init__()
+        super(MeasureEnv, self).__init__()
         
 
         # args
