@@ -23,7 +23,7 @@ if __name__ == '__main__':
     # log dir & summary writer
     current_dir = './results'
     train_log_dir = '/measure' + str(args.nbit) + '/sac'
-    exp_name = '/measure_every_n_steps{0}'.format(args.measure_every_n_steps) + 'seed{0}'.format(args.seed)
+    exp_name = '/measure_every_n_steps{0}'.format(args.measure_every_n_steps)+'/seed{0}'.format(args.seed)
     log_dir = current_dir + train_log_dir + exp_name 
 
     try:

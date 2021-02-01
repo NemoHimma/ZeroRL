@@ -63,7 +63,7 @@ def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5,
     
     x_scatter = np.linspace(0, min_y_length-1, int(min_y_length/scatter_space), dtype=np.int)
     y_scatter = y_mean[x_scatter]
-    ax.scatter(x_scatter, y_scatter, color=color, label=label, marker=marker)
+    ax.scatter(x_scatter, y_scatter, color=color, label=label, marker=marker,s = 100)
     
     y_std = y_seeds.std(axis = 0)
     upper_bound = y_mean + y_std
@@ -71,7 +71,6 @@ def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5,
     ax.fill_between(x_mean, upper_bound, lower_bound, where=upper_bound>lower_bound,
                     facecolor=color, interpolate = True, alpha = alpha)
     
-
 def dir_process(data_path):
     '''
     data_path = './results/latest_version5/*'
@@ -125,7 +124,7 @@ def main_plot():
 
         ax_count += 1
     
-    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 25,markerscale=2.0)
+    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 25,markerscale=1.2)
 
     ###
     limits = [3000, 5000, 8000, 10000]
@@ -140,7 +139,7 @@ def main_plot():
             for label in axs[i].yaxis.get_ticklabels():
                 label.set_fontsize(20)
             
-        plt.savefig('{}episodes.jpg'.format(limit), dpi = 100, bbox_inches='tight')
+        plt.savefig('{}episodes.pdf'.format(limit), dpi = 100, bbox_inches='tight')
         
 
 

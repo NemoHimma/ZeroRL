@@ -57,7 +57,7 @@ def read_data_from_txt(path_to_single_txt):
 
     return step_threshold
 
-def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 3.0, scatter_space = 1000, smooth_index=60):
+def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 3.0, scatter_space = 100, smooth_index=60):
     '''
     input: dqn_path_n = '../results/DQN_data/5/'
     '''
@@ -98,14 +98,14 @@ def plot_n_bit_dqn(ax, dqn_path_n, n, linewidth = 3.0, scatter_space = 1000, smo
     label = ['{}-run'.format(i+1) for i in range(num_curves)]
 
     for num in range(num_curves):
-        ax.plot(index, data[num][:], color=color_dictionary[num], linewidth= linewidth, markersize=12)
+        ax.plot(index, data[num][:], color=color_dictionary[num], linewidth= linewidth)
 
         x_scatter = np.linspace(0, min_length-1, int(min_length/scatter_space), dtype=np.int)
         y_scatter = data[num][x_scatter]
-        ax.scatter(x_scatter, y_scatter, color=color_dictionary[num], label=label[num], marker=marker_dictionary[num])
+        ax.scatter(x_scatter, y_scatter, color=color_dictionary[num], label=label[num], marker=marker_dictionary[num],s=100)
 
     
-    ax.legend(loc='lower right', fontsize = 20,markerscale=2)
+    ax.legend(loc='lower right', fontsize = 20,markerscale=1.2)
 
 
     for label in ax.xaxis.get_ticklabels():
