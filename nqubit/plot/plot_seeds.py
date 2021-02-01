@@ -15,7 +15,7 @@ color_dictionary = {
 }
 
 marker_dictionary = {
-    0:"o", 1:"^", 2:"D", 3:"x"
+    0:"o", 1:"^", 2:"D", 3:"x", 4:">", 5:"1", 6:"p", 7:"P", 8:"*"
 }
 
 def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=2.0, scatter_space = 400):
@@ -85,7 +85,8 @@ def dir_process(data_path):
     return final_path, method_names
 
 if __name__ == '__main__':
-    data_path = '../results/latest_episode_length5/sac/*'
+    #data_path = '../results/latest_episode_length5/sac/*'
+    data_path = '../results/latest_reward_scale5/sac/*'
     final_path, method_names = dir_process(data_path)
     final_path, method_names = sorted(final_path), sorted(method_names)
 
@@ -106,4 +107,4 @@ if __name__ == '__main__':
         label.set_fontsize(20)
 
     ax.legend(loc='lower right', fontsize = 20, markerscale=0.9)
-    plt.savefig('episode_length_comparision.pdf', dpi = 100, bbox_inches='tight')
+    plt.savefig('reward_scale_comparision.pdf', dpi = 100, bbox_inches='tight')
