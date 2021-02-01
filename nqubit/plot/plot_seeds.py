@@ -86,7 +86,8 @@ def dir_process(data_path):
 
 if __name__ == '__main__':
     #data_path = '../results/latest_episode_length5/sac/*'
-    data_path = '../results/latest_reward_scale5/sac/*'
+    #data_path = '../results/latest_reward_scale5/sac/*'
+    data_path = '../results/measure5/sac/*'
     final_path, method_names = dir_process(data_path)
     final_path, method_names = sorted(final_path), sorted(method_names)
 
@@ -107,4 +108,7 @@ if __name__ == '__main__':
         label.set_fontsize(20)
 
     ax.legend(loc='lower right', fontsize = 20, markerscale=0.9)
-    plt.savefig('reward_scale_comparision.pdf', dpi = 100, bbox_inches='tight')
+    ax.set_xlim(0, 10000)
+    plt.savefig('measure_every_n_comparision10000.pdf', dpi = 100, bbox_inches='tight')
+    ax.set_xlim(0, 5000)
+    plt.savefig('measure_every_n_comparision5000.pdf', dpi = 100, bbox_inches='tight')
