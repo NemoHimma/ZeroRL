@@ -87,16 +87,17 @@ def dir_process(data_path):
 if __name__ == '__main__':
     #data_path = '../results/latest_episode_length5/sac/*'
     #data_path = '../results/latest_reward_scale5/sac/*'
-    data_path = '../results/measure5/sac/*'
+    #data_path = '../results/measure5/sac/*'
+    data_path  = '../results/EnvSetting5/*'
     final_path, method_names = dir_process(data_path)
-    final_path, method_names = sorted(final_path), sorted(method_names)
+    #final_path, method_names = sorted(final_path), sorted(method_names)
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 8))
     ax.set_xlabel('# episode', fontsize = 25)
     ax.set_ylabel('reward', fontsize = 25)
 
     for i in range(len(method_names)):
-        print('reading {} episode_length'.format(i+1))
+        print('reading {} setting'.format(i+1))
         plot_func(ax, final_path[i], color_dictionary[i], method_names[i], marker_dictionary[i])
 
     print('saving figures')
@@ -108,7 +109,8 @@ if __name__ == '__main__':
         label.set_fontsize(20)
 
     ax.legend(loc='lower right', fontsize = 20, markerscale=0.9)
+
     ax.set_xlim(0, 10000)
-    plt.savefig('measure_every_n_comparision10000.pdf', dpi = 100, bbox_inches='tight')
+    plt.savefig('setting.pdf', dpi = 100, bbox_inches='tight')
     ax.set_xlim(0, 5000)
-    plt.savefig('measure_every_n_comparision5000.pdf', dpi = 100, bbox_inches='tight')
+    plt.savefig('setting.pdf', dpi = 100, bbox_inches='tight')

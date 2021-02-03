@@ -7,9 +7,9 @@ from tqdm import tqdm
 from datetime import timedelta
 
 from tensorboardX import SummaryWriter
-from utils.nqbit_parameters import get_args  
+from utils.nqubit_setting import get_args  
 
-from energy_env.MeasureEnv import MeasureEnv # Env
+from energy_env.EnvSetting import OneHotEnv, DoubleOneHotEnv, NoOneHotEnv, OneHotActionEnv  #Env
 
 from agents.SACAgent import SACAgent # Agent
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
 
     # log dir & summary writer
     current_dir = './results'
-    train_log_dir = '/latest_reward_scale' + str(args.nbit) + '/sac'
-    exp_name = '/reward_scale{0}'.format(args.reward_scale)+'/seed{0}'.format(args.seed)
+    train_log_dir = '/EnvSetting' + str(args.nbit) + '/sac'
+    exp_name = '{}'.format(args.env_id) + '/seed{0}'.format(args.seed)
     log_dir = current_dir + train_log_dir + exp_name 
 
     try:
@@ -45,7 +45,14 @@ if __name__ == '__main__':
     device = torch.device("cuda:{}".format(args.GPU))
 
     # Env
-    env = MeasureEnv(args.episode_length, args.nbit, args.measure_every_n_steps, args.reward_scale)
+    if args.env_id == 'OneHotEnv':
+        env = OneHotEnv(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
+    elif args.env_id == 'DoubleOneHotEnv':
+        env = DoubleOneHotEnv(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
+    elif args.env_id == 'OneHotActionEnv':
+        env = OneHotActionEnv(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
+    elif args.env_id == 'NoOneHotEnv':
+        env = NoOneHotEnv(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
 
     # RNG
     np.random.seed(args.seed)
@@ -54,6 +61,7 @@ if __name__ == '__main__':
 
     # Agent
     agent = SACAgent(args, env, log_dir, device)
+
 
     #############################   Main Training Loop ############################
     totalstep = 0
@@ -113,6 +121,8 @@ if __name__ == '__main__':
                 #writer.add_scalar('reward', info['reward'], totalstep)
                 #writer.add_scalar('extra_reward', info['extra_reward'], totalstep)
             
+            if info and (info['threshold'] >= -1.05):
+                pass
                 '''
                 if satisfied_flag == 0:
                     satisfied_flag = episode

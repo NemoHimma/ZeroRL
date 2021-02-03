@@ -67,7 +67,7 @@ class OneHotEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, max_episode_steps=30, nbit=10, measure_every_n_steps=1, reward_scale=1.0):
+    def __init__(self, nbit=5, max_episode_steps=30, measure_every_n_steps=1, reward_scale=5.0):
         super(OneHotEnv, self).__init__()
         
 
@@ -110,23 +110,23 @@ class OneHotEnv(gym.Env):
         time_encoding = self.enc.transform([[self.counter]]).toarray()
         self.state = np.hstack([time_encoding, np.reshape(b, (1, 6))])[0] # (1, 9) ---> (9, )
         
-        #if (self.counter % self.measure_every_n_steps == 0):
-        measure_state = b
-        reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
+        if (self.counter % self.measure_every_n_steps == 0):
+            measure_state = b
+            reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
-        if self.counter == (self.evolution_step - 1) :
+            if self.counter == (self.evolution_step - 1) :
 
-            self.done = True
+                self.done = True
 
             #measure_state = np.sum(self.action_buffer, axis = 0)
             #measure_state  = b
            # reward, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
+                return self.state, threshold * self.reward_scale, self.done, {'threshold':threshold, 'solution':measure_state}
+        
             return self.state, threshold * self.reward_scale, self.done, {'threshold':threshold, 'solution':measure_state}
         
-        return self.state, threshold * self.reward_scale, self.done, {'threshold':threshold, 'solution':measure_state}
-        
-        #@return self.state, 0.0, self.done, {'measure':False}
+        return self.state, 0.0, self.done, {}
         
     def reset(self):
         self.counter = 0
@@ -168,7 +168,7 @@ class DoubleOneHotEnv(gym.Env):
 
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, nbit=5, episode_length=30, reward_scale = 5.0, measure_every_n_steps=1):
+    def __init__(self, nbit=5, episode_length=30, measure_every_n_steps=1, reward_scale = 5.0):
         super(DoubleOneHotEnv, self).__init__()
         
         self.evolution_step = 10  # 
@@ -320,16 +320,19 @@ class NoOneHotEnv(gym.Env):
 
         self.state += action
 
-        neg_energy, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
+        if (self.counter % self.measure_every_n_steps == 0):
+            neg_energy, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
 
-        reward = threshold
+            reward = threshold
     
 
-        if (self.counter == self.episode_length):
-            self.done = True
-            return self.state, reward  * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
+            if (self.counter == self.episode_length):
+                self.done = True
+                return self.state, reward  * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
 
-        return self.state, reward * self.reward_scale, self.done, {}
+            return self.state, reward * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
+
+        return self.state, 0.0, self.done, {}
 
     
     def reset(self):
@@ -355,34 +358,37 @@ class NoOneHotEnv(gym.Env):
 
 
 
-class NoEpisodeEnv(gym.Env):
+class OneHotActionEnv(gym.Env):
     '''
 
-    
 
-    s_0: b_0              get b_1
-    s_1: b_1              get b_2
-    s_2: b_2              get b_3
+    s_0: [one-hot(0) a_init]  ----> a_0   r_0 = (a_init + a_0)
+    s_1: [one-hot(1) a_0   ]  ----> a_1   r_1 = (a_init + a_0 + a_1)
+    s_2: [one-hot(2) a_2   ]  ----> a_2   r_2 = (a_init + a_0 + a_1 + a_2)
     
-
-    Continue ...
 
     '''
 
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, nbit=5, measure_every_n_steps=1, reward_scale = 5.0):
-        super(NoEpisodeEnv, self).__init__()
+    def __init__(self, nbit=5, episode_length=30, measure_every_n_steps=1, reward_scale = 5.0):
+        super(OneHotActionEnv, self).__init__()
         
-        # setting
-    
+        # args
+        self.reward_scale = reward_scale
         self.measure_every_n_steps = measure_every_n_steps
+
+        # one-hot encoding
+        self.enc = OneHotEncoder()
+        self.evolution_step = episode_length + 1 # 31
+        time_label = np.reshape(np.array([i for i in range(self.evolution_step)]), (self.evolution_step, 1))
+        self.enc.fit(time_label) # i = [0, 30]
 
         # Env
         self.action_space = spaces.Box(low = -0.01, high = 0.01, shape = (6, ), dtype = np.float32)
-        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(6, ), dtype = np.float32)
+        self.observation_space = spaces.Box(low = -1.0 , high = 1.0, shape=(self.evolution_step + 6, ), dtype = np.float32)
 
-        # Measure Part
+        # Measure
         self.nbits = nbit # n 
         self.Numbers = nqubits_para[str(self.nbits)] # Numbers
         self.g = 1e-2   # g
@@ -393,37 +399,48 @@ class NoEpisodeEnv(gym.Env):
         self.done = False
         self.counter = 0
         self.state = None  # s
-        self.reward_scale = reward_scale
+        
+        self.action_buffer = []
 
         
         
     def step(self, action):
+
         self.counter += 1
 
         '''
-        counter: 1~100
+        counter: 1~30
         '''
 
-        self.state += action
+        self.action_buffer.append(action)
+        time_encoding = self.enc.transform([[self.counter]]).toarray()
+        self.state = np.hstack([time_encoding, np.reshape(action, (1, 6))])[0]
 
-        neg_energy, threshold = measure.CalcuFidelity(self.nbits, self.state, self.Hb, self.Hp_array, self.T, self.g)
+        if (self.counter % self.measure_every_n_steps == 0):
+            measure_state = np.sum(self.action_buffer, axis = 0)
+            neg_energy, threshold = measure.CalcuFidelity(self.nbits, measure_state, self.Hb, self.Hp_array, self.T, self.g)
 
-        reward = threshold
+            reward = threshold
     
 
-        if (self.counter == self.episode_length):
-            self.done = True
-            return self.state, reward  * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
+            if (self.counter == self.evolution_step - 1):
+                self.done = True
+                return self.state, reward  * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
 
-        return self.state, reward * self.reward_scale, self.done, {}
+            return self.state, reward * self.reward_scale, self.done, {'threshold':threshold, 'solution':self.state}
+    
+        return self.state, 0.0, self.done, {}
 
     
     def reset(self):
 
         self.counter = 0
-        self.state = np.zeros((6, ), dtype = np.float32)
+        time_encoding = self.enc.transform([[self.counter]]).toarray()  # (1,31)
+        initial_action = np.zeros((6, ), dtype = np.float32)
+        self.state = np.hstack([time_encoding, np.reshape(initial_action, (1, 6))])[0]  # (1, 31+6) ---> (37, )
         self.done = False
-        
+        self.action_buffer = []
+
         return self.state
 
     def MakeMatrix(self, n , Numbers):

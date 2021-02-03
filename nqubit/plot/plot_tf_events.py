@@ -92,13 +92,13 @@ def dir_process(data_path):
 def main_plot():
     # figure & axes
     fig, axs = plt.subplots(1, 3, figsize=(24, 8))
-    fig.suptitle('Nqubit', fontsize = 20)
+    #fig.suptitle('Nqubit', fontsize = 20)
 
     # config respective axes
     for i in range(3):
-        axs[i].set_xlabel('# episode', fontsize = 16)
-        axs[i].set_ylabel('reward', fontsize = 16)
-        axs[i].set_title('{0}-bits'.format(i + 5), fontsize = 20)
+        axs[i].set_xlabel('# episode', fontsize = 25)
+        axs[i].set_ylabel('reward', fontsize = 25)
+        #axs[i].set_title('{0}-bits'.format(i + 5), fontsize = 20)
 
     print('start plotting')
     # plot axes

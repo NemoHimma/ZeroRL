@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_td3_args
-from energy_env.NqubitEnv import NqubitEnvOneHot  # Env
+from energy_env.EnvSetting import OneHotEnv  # Env
 from agents.TD3Agent import TD3Agent # Agent
 
 if __name__ == '__main__':
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:{}".format(args.GPU))
 
     # Env
-    env = NqubitEnvOneHot(args.episode_length, args.nbit, args.measure_every_n_steps, args.reward_scale)
+    env = OneHotEnv(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
     act_limit = env.action_space.high[0]
 
     # rng

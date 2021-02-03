@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 from tensorboardX import SummaryWriter
 from utils.nqbit_parameters import get_ddpg_args
-from energy_env.NqubitEnv import NqubitEnvContinuous  # Env
+from energy_env.EnvSetting import OneHotEnv  # Env
 from agents.DDPGAgent import DDPGAgent # Agent
 
 if __name__ == '__main__':
@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
 
     # Env
-    env = NqubitEnvContinuous(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
+    env = OneHotEnv(args.nbit, args.episode_length, args.measure_every_n_steps, args.reward_scale)
     act_limit = env.action_space.high[0]
 
     # rng
