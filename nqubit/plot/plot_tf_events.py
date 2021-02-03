@@ -21,7 +21,7 @@ linestyle_dictionary = {
 }
 
 
-def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=3.0, scatter_space = 400):
+def plot_func(ax, method_dirs, color, label, marker, smooth_index=15, alpha=0.4, linewidth=2.0, scatter_space = 400):
     '''
     input: method_dirs : ['algo1/seed1','~algo1/seed4']
     '''

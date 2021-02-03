@@ -18,7 +18,7 @@ marker_dictionary = {
     0:"o", 1:"^", 2:"D", 3:"x", 4:">", 5:"1", 6:"p", 7:"P", 8:"*"
 }
 
-def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.5, linewidth=2.0, scatter_space = 400):
+def plot_func(ax, method_dirs, color, label, marker, smooth_index=30, alpha=0.4, linewidth=2.0, scatter_space = 400):
     '''
     input: method_dirs : ['algo1/seed1','~algo1/seed4']
     '''
@@ -110,7 +110,8 @@ if __name__ == '__main__':
 
     ax.legend(loc='lower right', fontsize = 20, markerscale=0.9)
 
-    ax.set_xlim(0, 10000)
-    plt.savefig('setting.pdf', dpi = 100, bbox_inches='tight')
+    #ax.set_xlim(0, 10000)
+    #plt.savefig('y_tune_setting.pdf', dpi = 100, bbox_inches='tight')
+    ax.set_ylim(-2.4, -0.9)
     ax.set_xlim(0, 5000)
-    plt.savefig('setting.pdf', dpi = 100, bbox_inches='tight')
+    plt.savefig('y_tune_setting.pdf', dpi = 100, bbox_inches='tight')
