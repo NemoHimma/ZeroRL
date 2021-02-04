@@ -9,10 +9,10 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 
 color_dictionary = {
-    0: "#1F618D", 1: "#F322CD", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
-    5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",
-    10: "#D35400", 11: "#800000", 12: "#0E0F0F", 13: "#F1948A", 14: "#1C2833",
-    15: "#E74C3C", 16: "#0000FF" 
+    0: "#1F618D", 1: "#F322CD", 2: "#E74C3C", 3: "#7FB3D5", 4: "#22DAF3",
+    5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#D35400",
+    10: "#2980B9", 11: "#800000", 12: "#0E0F0F", 13: "#F1948A", 14: "#1C2833",
+    15: "#E74C3C", 16: "#0000FF" ,
 }
 marker_dictionary = {
     0:"o", 1:"^", 2:"D", 3:"x"
@@ -23,7 +23,7 @@ linestyle_dictionary = {
 
 smooth_index = 10
 
-def plot_func(ax, method_dirs, color, label, marker, smooth_index=10, alpha=0.4, linewidth=1.5, scatter_space = 500):
+def plot_func(ax, method_dirs, color, label, marker, smooth_index=10, alpha=0.4, linewidth=1.0, scatter_space = 500):
     '''
     input: method_dirs : ['algo1/seed1','~algo1/seed4']
     '''
@@ -93,19 +93,19 @@ def dir_process(data_path):
 
 def main_plot():
     # figure & axes
-    fig, axs = plt.subplots(1, 3, figsize=(24, 8))
+    fig, axs = plt.subplots(1, 2, figsize=(24, 8))
     #fig.suptitle('Nqubit', fontsize = 20)
 
     # config respective axes
-    for i in range(3):
-        axs[i].set_xlabel('# episode', fontsize = 30)
-        axs[i].set_ylabel('reward', fontsize = 30)
+    for i in range(2):
+        axs[i].set_xlabel('# episode', fontsize = 35)
+        axs[i].set_ylabel('reward', fontsize = 35)
         #axs[i].set_title('{0}-bits'.format(i + 5), fontsize = 20)
 
     print('start plotting')
     # plot axes
     ax_count = 0
-    for nbit in [5, 6, 7]:                                   # key_part to change [5, 6, 7]
+    for nbit in [5, 7]:                                   # key_part to change [5, 6, 7]
         # td3,sac,ddpg dirs
         print('plotting {0} axes'.format(ax_count + 1))
         data_path_n = '../results/latest_version{0}/*'.format(nbit)
@@ -126,24 +126,24 @@ def main_plot():
 
         ax_count += 1
     
-    axs[1].legend(loc='lower center',fancybox=True, shadow=True, ncol=3, fontsize = 30, markerscale=1.2)
-
+    axs[0].legend(loc='upper center',bbox_to_anchor=(1.1, -0.15), fancybox=True, shadow=True, ncol=3, fontsize = 32, markerscale=1.2)
     ###
     limits = [8000, 10000]
     plt.tight_layout()
+    subplots_adjust(wspace=0.2)
     
 
     print('saving figures')
     for limit in limits:
-        for i in range(3):
+        for i in range(2):
             axs[i].set_xlim(0, limit)
             for label in axs[i].xaxis.get_ticklabels():
-                label.set_fontsize(28)
+                label.set_fontsize(30)
             for label in axs[i].yaxis.get_ticklabels():
-                label.set_fontsize(28)
+                label.set_fontsize(30)
             
-        plt.savefig('{}episodes{}.pdf'.format(limit,smooth_index), dpi = 100, bbox_inches='tight')
-        plt.savefig('{}episodes{}.jpg'.format(limit,smooth_index), dpi = 100, bbox_inches='tight')
+        plt.savefig('{}episodes{}2plots.pdf'.format(limit,smooth_index), dpi = 100, bbox_inches='tight')
+        plt.savefig('{}episodes{}2plots.jpg'.format(limit,smooth_index), dpi = 100, bbox_inches='tight')
         
         
 
