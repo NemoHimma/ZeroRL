@@ -88,13 +88,14 @@ if __name__ == '__main__':
     #data_path = '../results/latest_episode_length5/sac/*'
     #data_path = '../results/latest_reward_scale5/sac/*'
     #data_path = '../results/measure5/sac/*'
-    data_path  = '../results/EnvSetting5/*'
+    #data_path  = '../results/EnvSetting5/*'
+    data_path = '../results/latest_version7/*'
     final_path, method_names = dir_process(data_path)
     #final_path, method_names = sorted(final_path), sorted(method_names)
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 8))
-    ax.set_xlabel('# episode', fontsize = 25)
-    ax.set_ylabel('reward', fontsize = 25)
+    ax.set_xlabel('# episode', fontsize = 35)
+    ax.set_ylabel('reward', fontsize = 35)
 
     for i in range(len(method_names)):
         print('reading {} setting'.format(i+1))
@@ -104,14 +105,15 @@ if __name__ == '__main__':
     
 
     for label in ax.xaxis.get_ticklabels():
-        label.set_fontsize(20)
+        label.set_fontsize(30)
     for label in ax.yaxis.get_ticklabels():
-        label.set_fontsize(20)
+        label.set_fontsize(30)
 
-    ax.legend(loc='lower right', fontsize = 20, markerscale=0.9)
+    ax.legend(loc='lower right', fontsize = 30, markerscale=0.9)
 
     #ax.set_xlim(0, 10000)
     #plt.savefig('y_tune_setting.pdf', dpi = 100, bbox_inches='tight')
     ax.set_ylim(-2.4, -0.9)
-    ax.set_xlim(0, 5000)
-    plt.savefig('y_tune_setting.pdf', dpi = 100, bbox_inches='tight')
+    ax.set_xlim(0, 10000)
+    plt.savefig('10000episodes.pdf', dpi = 100, bbox_inches='tight')
+    plt.savefig('10000episodes.jpg', dpi = 100, bbox_inches='tight')
