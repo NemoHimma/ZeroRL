@@ -91,19 +91,19 @@ def dir_process(data_path):
 
 def main_plot():
     # figure & axes
-    fig, axs = plt.subplots(1, 3, figsize=(24, 8))
+    fig, axs = plt.subplots(1, 2, figsize=(24, 8))
     #fig.suptitle('Nqubit', fontsize = 20)
 
     # config respective axes
-    for i in range(3):
-        axs[i].set_xlabel('# episode', fontsize = 25)
-        axs[i].set_ylabel('reward', fontsize = 25)
+    for i in range(2):
+        axs[i].set_xlabel('# episode', fontsize = 35)
+        axs[i].set_ylabel('reward', fontsize = 35)
         #axs[i].set_title('{0}-bits'.format(i + 5), fontsize = 20)
 
     print('start plotting')
     # plot axes
     ax_count = 0
-    for nbit in [5, 6, 7]:                                   # key_part to change [5, 6, 7]
+    for nbit in [5, 7]:                                   # key_part to change [5, 6, 7]
         # td3,sac,ddpg dirs
         print('plotting {0} axes'.format(ax_count + 1))
         data_path_n = '../results/latest_version{0}/*'.format(nbit)
@@ -124,22 +124,24 @@ def main_plot():
 
         ax_count += 1
     
-    axs[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 25,markerscale=1.2)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),fancybox=True, shadow=True, ncol=3, fontsize = 25,markerscale=1.2)
 
     ###
-    limits = [3000, 5000, 8000, 10000]
+    limits = [8000, 10000]
     plt.tight_layout()
 
     print('saving figures')
     for limit in limits:
-        for i in range(3):
+        for i in range(2):
             axs[i].set_xlim(0, limit)
             for label in axs[i].xaxis.get_ticklabels():
-                label.set_fontsize(20)
+                label.set_fontsize(30)
             for label in axs[i].yaxis.get_ticklabels():
-                label.set_fontsize(20)
+                label.set_fontsize(30)
             
         plt.savefig('{}episodes.pdf'.format(limit), dpi = 100, bbox_inches='tight')
+        plt.savefig('{}episodes.jpg'.format(limit), dpi = 100, bbox_inches='tight')
+        
         
 
 
