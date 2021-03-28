@@ -10,9 +10,10 @@
 *.jpg
 *.pdf
 *.txt
-params.json
-./results
+
+
 .gitignore
+nqubit/results/*
 nqubit/results/solution2/s5/events.out.tfevents.1611413545.node01
 nqubit/results/solution2/s4/events.out.tfevents.1611413545.node01
 nqubit/results/solution2/s3/events.out.tfevents.1611413545.node01

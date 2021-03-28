@@ -19,7 +19,7 @@ linewidth = 1.0 # linewidth of the figure line
 scatter_space = 100 # mark space out each (scatter_space) point
 sac_key_name = "episode_threshold"
 ddpg_key_name = "episode_reward"
-td3_key_name = "episode_reward"
+td3_key_name = "episode_reward" 
 color_dictionary = {
     0: "#0000FF", 1: "#E74C3C", 2: "#2980B9", 3: "#7FB3D5", 4: "#22DAF3",
     5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",

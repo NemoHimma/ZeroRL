@@ -7,10 +7,10 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 
 
-color_dictionary = {#D35400
-    0: "#1F618D", 1: "#F322CD", 2: "#D35400", 3: "#7FB3D5", 4: "#22DAF3",
+color_dictionary = {
+    0: "#1F618D", 1: "#F322CD", 2: "#D35400", 3: "#7FB3D5", 4: "#F1948A",
     5: "#5B2C6F", 6: "#800000", 7: "#008000", 8: "#008000", 9: "#E74C3C",
-    10: "#0E0F0F", 11: "#800000", 12: "#2980B9", 13: "#F1948A", 14: "#1C2833",
+    10: "#0E0F0F", 11: "#800000", 12: "#2980B9", 13: "#22DAF3", 14: "#1C2833",
     15: "#E74C3C", 16: "#0000FF" 
 }
 
@@ -87,27 +87,32 @@ def dir_process(data_path):
 def order_reward_scale(final_path, method_names):
 
     final_path_order, method_names_order = [], []
-    index = [0, 3, 2, 4, 1]
+    index = [1, 3, 2, 0]
     for i in index:
         final_path_order.append(final_path[i])
         method_names_order.append(method_names[i])
 
     return final_path_order, method_names_order
    
-    
+
 
 
 
 if __name__ == '__main__':
     #data_path = '../results/latest_episode_length5/sac/*'
-    data_path = '../results/latest_reward_scale5/sac/*'
+    #data_path = '../results/latest_reward_scale5/sac/*'
     #data_path = '../results/measure5/sac/*'
-    #data_path  = '../results/EnvSetting5/*'
+    data_path  = '../results/EnvSetting5/*'
     #data_path = '../results/latest_version7/*'
     final_path, method_names = dir_process(data_path)
     print(final_path, method_names)
 
     final_path, method_names = order_reward_scale(final_path, method_names)
+    # method_names[0] = r'$\Delta t_{\rm{w}}=2$'
+    # method_names[1] = r'$\Delta t_{\rm{w}}=5$'
+    # method_names[2] = r'$\Delta t_{\rm{w}}=10$'
+    # method_names[3] = r'$\Delta t_{\rm{w}}=15$'
+    #final_path, method_names = sorted(final_path), sorted(method_names)
     print(final_path, method_names)
     
     
@@ -127,11 +132,11 @@ if __name__ == '__main__':
     for label in ax.yaxis.get_ticklabels():
         label.set_fontsize(30)
 
-    ax.legend(loc='lower right', fontsize = 32, markerscale=0.9)
+    ax.legend(loc='lower right', fontsize = 31, markerscale=0.9)
 
     #ax.set_xlim(0, 10000)
     #plt.savefig('y_tune_setting.pdf', dpi = 100, bbox_inches='tight')
-    ax.set_ylim(-1.4, -0.95)
+    ax.set_ylim(-2.5, -0.95)
     ax.set_xlim(0, 5000)
-    plt.savefig('reward_scale_small.pdf', dpi = 100, bbox_inches='tight')
-    plt.savefig('reward_scale_small.jpg', dpi = 100, bbox_inches='tight')
+    plt.savefig('setting1.pdf', dpi = 100, bbox_inches='tight')
+    plt.savefig('setting1.jpg', dpi = 100, bbox_inches='tight')

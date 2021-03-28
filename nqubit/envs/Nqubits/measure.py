@@ -38,7 +38,7 @@ def CalcuFidelity(n,p,Hb,Hp_array,T,g):
 		norm = np.linalg.norm(Hp,ord = np.inf)
 		Hb=Hb_evolve/norm
 		Hp = Hp/norm
-		g = g_evolve*norm
+		g = g_evolve*norm 
 		T = T_evolve*norm
 		C = []
 		find_site = []
